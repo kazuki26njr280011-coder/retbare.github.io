@@ -1,0 +1,1258 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RetBareServer - PVPもサバイバルも、全部ここで。</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700;900&family=Orbitron:wght@700;900&display=swap');
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #7c3aed;
+            --primary-dark: #5b21b6;
+            --accent: #f59e0b;
+            --accent-glow: #fbbf24;
+            --bg-dark: #0a0a0f;
+            --bg-card: #13131a;
+            --bg-card-hover: #1a1a25;
+            --text: #e4e4e7;
+            --text-muted: #a1a1aa;
+            --border: #27272a;
+            --success: #10b981;
+            --danger: #ef4444;
+            --info: #3b82f6;
+        }
+
+        body {
+            font-family: 'Noto Sans JP', sans-serif;
+            background: var(--bg-dark);
+            color: var(--text);
+            overflow-x: hidden;
+        }
+
+        .hero {
+            position: relative;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 2rem;
+            background: radial-gradient(ellipse at 50% 0%, rgba(124,58,237,0.15) 0%, transparent 60%),
+                        radial-gradient(ellipse at 80% 80%, rgba(245,158,11,0.08) 0%, transparent 50%),
+                        var(--bg-dark);
+        }
+
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-image:
+                radial-gradient(1px 1px at 20% 30%, rgba(255,255,255,0.3), transparent),
+                radial-gradient(1px 1px at 40% 70%, rgba(255,255,255,0.2), transparent),
+                radial-gradient(1px 1px at 60% 20%, rgba(255,255,255,0.3), transparent),
+                radial-gradient(1px 1px at 80% 50%, rgba(255,255,255,0.15), transparent),
+                radial-gradient(1px 1px at 10% 80%, rgba(255,255,255,0.2), transparent),
+                radial-gradient(1px 1px at 90% 10%, rgba(255,255,255,0.25), transparent);
+            pointer-events: none;
+        }
+
+        .hero-logo {
+            font-family: 'Orbitron', sans-serif;
+            font-size: clamp(2.5rem, 7vw, 5rem);
+            font-weight: 900;
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 0.5rem;
+            letter-spacing: 0.05em;
+        }
+
+        .hero-tagline {
+            font-size: clamp(1rem, 2.5vw, 1.5rem);
+            color: var(--text-muted);
+            margin-bottom: 2rem;
+            font-weight: 400;
+        }
+
+        .hero-buttons {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+            justify-content: center;
+            margin-bottom: 3rem;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.875rem 2rem;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-weight: 700;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            border: none;
+            cursor: pointer;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            color: #fff;
+            box-shadow: 0 4px 20px rgba(124,58,237,0.4);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 30px rgba(124,58,237,0.6);
+        }
+
+        .btn-accent {
+            background: linear-gradient(135deg, var(--accent), #d97706);
+            color: #000;
+            box-shadow: 0 4px 20px rgba(245,158,11,0.4);
+        }
+
+        .btn-accent:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 30px rgba(245,158,11,0.6);
+        }
+
+        .server-ip {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.75rem;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            padding: 1rem 1.5rem;
+            border-radius: 12px;
+            font-family: 'Orbitron', monospace;
+            font-size: 1.1rem;
+            color: var(--accent);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .server-ip:hover {
+            border-color: var(--accent);
+            box-shadow: 0 0 20px rgba(245,158,11,0.2);
+        }
+
+        .server-ip .label {
+            font-family: 'Noto Sans JP', sans-serif;
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            font-weight: 400;
+        }
+
+        .ip-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        nav {
+            position: fixed;
+            top: 0; left: 0; right: 0;
+            z-index: 1000;
+            background: rgba(10,10,15,0.85);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--border);
+            padding: 0.75rem 2rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        nav .nav-logo {
+            font-family: 'Orbitron', sans-serif;
+            font-weight: 900;
+            font-size: 1.25rem;
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        nav .nav-links {
+            display: flex;
+            gap: 1.5rem;
+            list-style: none;
+        }
+
+        nav .nav-links a {
+            color: var(--text-muted);
+            text-decoration: none;
+            font-size: 0.9rem;
+            font-weight: 700;
+            transition: color 0.3s;
+        }
+
+        nav .nav-links a:hover { color: var(--accent); }
+
+        section {
+            padding: 5rem 2rem;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .section-title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: clamp(1.5rem, 4vw, 2.5rem);
+            font-weight: 900;
+            text-align: center;
+            margin-bottom: 0.5rem;
+            background: linear-gradient(135deg, #fff, var(--text-muted));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .section-sub {
+            text-align: center;
+            color: var(--text-muted);
+            margin-bottom: 3rem;
+            font-size: 1rem;
+        }
+
+        .game-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .game-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 2rem;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .game-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, var(--primary), var(--accent));
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .game-card:hover {
+            transform: translateY(-4px);
+            border-color: var(--primary);
+            box-shadow: 0 8px 40px rgba(124,58,237,0.15);
+        }
+
+        .game-card:hover::before { opacity: 1; }
+        .game-card .card-icon { font-size: 2.5rem; margin-bottom: 1rem; }
+        .game-card h3 { font-size: 1.3rem; font-weight: 900; margin-bottom: 0.25rem; }
+
+        .game-card .card-tag {
+            display: inline-block;
+            font-size: 0.7rem;
+            font-weight: 700;
+            padding: 0.2rem 0.6rem;
+            border-radius: 6px;
+            margin-bottom: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .tag-pvp { background: rgba(239,68,68,0.15); color: #ef4444; }
+        .tag-survival { background: rgba(16,185,129,0.15); color: #10b981; }
+        .tag-minigame { background: rgba(59,130,246,0.15); color: #3b82f6; }
+        .tag-creative { background: rgba(245,158,11,0.15); color: #f59e0b; }
+
+        .game-card p { color: var(--text-muted); font-size: 0.95rem; line-height: 1.7; }
+
+        .game-card .reward {
+            margin-top: 1rem;
+            padding: 0.75rem;
+            background: rgba(245,158,11,0.08);
+            border-radius: 8px;
+            font-size: 0.85rem;
+            color: var(--accent);
+        }
+
+        .economy-flow {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 3rem;
+        }
+
+        .flow-step {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 1.5rem;
+            text-align: center;
+        }
+
+        .flow-step .step-num {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 40px; height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            color: #fff;
+            font-weight: 900;
+            font-size: 1.1rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .flow-step h4 { font-size: 1rem; margin-bottom: 0.5rem; }
+        .flow-step p { color: var(--text-muted); font-size: 0.85rem; line-height: 1.6; }
+
+        .feature-highlight {
+            background: linear-gradient(135deg, rgba(124,58,237,0.08), rgba(245,158,11,0.05));
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 2rem;
+            margin: 2rem 0;
+        }
+
+        .feature-highlight h3 { font-size: 1.2rem; font-weight: 900; margin-bottom: 0.75rem; }
+        .feature-highlight p { color: var(--text-muted); font-size: 0.95rem; line-height: 1.7; }
+
+        .items-showcase {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1.25rem;
+            margin-top: 1.5rem;
+        }
+
+        .item-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 1.25rem;
+        }
+
+        .item-card h4 { font-size: 1rem; margin-bottom: 0.5rem; }
+        .item-card p { color: var(--text-muted); font-size: 0.85rem; line-height: 1.6; }
+        .item-card .item-price { margin-top: 0.5rem; color: var(--accent); font-weight: 700; font-size: 0.9rem; }
+
+        .shop-category { margin-bottom: 2rem; }
+
+        .shop-category h3 {
+            font-size: 1.1rem;
+            font-weight: 900;
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        table { width: 100%; border-collapse: collapse; margin-bottom: 1rem; }
+
+        table th, table td {
+            padding: 0.75rem 1rem;
+            text-align: left;
+            border-bottom: 1px solid var(--border);
+            font-size: 0.9rem;
+        }
+
+        table th {
+            color: var(--text-muted);
+            font-weight: 700;
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        table tr:hover td { background: rgba(124,58,237,0.05); }
+        .price { color: var(--accent); font-weight: 700; }
+
+        .gacha-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .gacha-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 1.75rem;
+            transition: all 0.3s ease;
+        }
+
+        .gacha-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 30px rgba(0,0,0,0.3);
+        }
+
+        .gacha-card h3 { font-size: 1.15rem; margin-bottom: 0.25rem; }
+        .gacha-card .gacha-price { font-size: 1.5rem; font-weight: 900; color: var(--accent); margin: 0.5rem 0; }
+        .gacha-card .gacha-desc { color: var(--text-muted); font-size: 0.9rem; line-height: 1.6; }
+
+        .enchant-tabs {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+            margin-bottom: 1.5rem;
+            justify-content: center;
+        }
+
+        .enchant-tab {
+            padding: 0.5rem 1.25rem;
+            border-radius: 8px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .enchant-tab.active, .enchant-tab:hover {
+            background: var(--primary);
+            color: #fff;
+            border-color: var(--primary);
+        }
+
+        .enchant-panel { display: none; }
+        .enchant-panel.active { display: block; }
+
+        .enchant-item {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 1rem 1.25rem;
+            margin-bottom: 0.75rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 1rem;
+        }
+
+        .enchant-item .enchant-name { font-weight: 700; font-size: 0.95rem; color: #fff; }
+        .enchant-item .enchant-jp { font-size: 0.8rem; color: var(--primary); }
+        .enchant-item .enchant-desc { font-size: 0.85rem; color: var(--text-muted); margin-top: 0.25rem; line-height: 1.5; }
+        .enchant-item .enchant-meta { text-align: right; white-space: nowrap; font-size: 0.8rem; color: var(--text-muted); }
+        .enchant-item .enchant-meta .lv { color: var(--accent); font-weight: 700; }
+
+        .cmd-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .cmd-group {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 1.5rem;
+        }
+
+        .cmd-group h3 {
+            font-size: 1rem;
+            font-weight: 900;
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .cmd-item { display: flex; gap: 0.75rem; margin-bottom: 0.75rem; align-items: flex-start; }
+
+        .cmd-item code {
+            background: rgba(124,58,237,0.15);
+            color: var(--primary);
+            padding: 0.2rem 0.6rem;
+            border-radius: 6px;
+            font-size: 0.8rem;
+            font-weight: 700;
+            white-space: nowrap;
+            font-family: monospace;
+        }
+
+        .cmd-item span { color: var(--text-muted); font-size: 0.85rem; }
+
+        .rules-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .rule-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 1.5rem;
+        }
+
+        .rule-card h3 { font-size: 1rem; font-weight: 900; margin-bottom: 1rem; }
+        .rule-card.banned h3 { color: var(--danger); }
+        .rule-card.ask h3 { color: var(--accent); }
+        .rule-card.allowed h3 { color: var(--success); }
+
+        .rule-item {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            padding: 0.4rem 0;
+            border-bottom: 1px solid rgba(39,39,42,0.5);
+            line-height: 1.5;
+        }
+
+        .rule-item:last-child { border-bottom: none; }
+
+        .join-steps {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 2rem;
+        }
+
+        .join-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 2rem;
+            text-align: center;
+        }
+
+        .join-card h3 { font-size: 1.2rem; margin-bottom: 0.25rem; }
+
+        .join-card .badge {
+            display: inline-block;
+            font-size: 0.7rem;
+            font-weight: 700;
+            padding: 0.2rem 0.6rem;
+            border-radius: 6px;
+            margin-bottom: 1rem;
+        }
+
+        .badge-rec { background: rgba(16,185,129,0.15); color: #10b981; }
+        .badge-warn { background: rgba(239,68,68,0.15); color: #ef4444; }
+
+        .join-card ol {
+            text-align: left;
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            line-height: 1.8;
+            padding-left: 1.25rem;
+        }
+
+        .join-card .ip-display {
+            margin-top: 1rem;
+            padding: 0.75rem;
+            background: rgba(245,158,11,0.08);
+            border-radius: 8px;
+            font-family: monospace;
+            font-size: 1rem;
+            color: var(--accent);
+            font-weight: 700;
+        }
+
+        .faq-item {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            margin-bottom: 0.75rem;
+            overflow: hidden;
+        }
+
+        .faq-q {
+            padding: 1.25rem 1.5rem;
+            font-weight: 700;
+            font-size: 0.95rem;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: background 0.3s;
+        }
+
+        .faq-q:hover { background: var(--bg-card-hover); }
+
+        .faq-q::after {
+            content: '+';
+            font-size: 1.25rem;
+            color: var(--primary);
+            font-weight: 900;
+            transition: transform 0.3s;
+        }
+
+        .faq-item.open .faq-q::after { transform: rotate(45deg); }
+
+        .faq-a {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.4s ease, padding 0.3s ease;
+        }
+
+        .faq-item.open .faq-a {
+            max-height: 500px;
+            padding: 0 1.5rem 1.25rem;
+        }
+
+        .faq-a p { color: var(--text-muted); font-size: 0.9rem; line-height: 1.7; }
+
+        footer {
+            text-align: center;
+            padding: 3rem 2rem;
+            border-top: 1px solid var(--border);
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        footer a { color: var(--primary); text-decoration: none; }
+
+        @media (max-width: 768px) {
+            nav .nav-links { display: none; }
+            .hero { padding: 6rem 1.5rem 3rem; }
+            section { padding: 3rem 1rem; }
+            .enchant-item { flex-direction: column; }
+            .enchant-item .enchant-meta { text-align: left; }
+        }
+    </style>
+</head>
+<body>
+
+<nav>
+    <div class="nav-logo">RetBareServer</div>
+    <ul class="nav-links">
+        <li><a href="#games">ゲームモード</a></li>
+        <li><a href="#economy">経済</a></li>
+        <li><a href="#shop">ショップ</a></li>
+        <li><a href="#gacha">ガチャ</a></li>
+        <li><a href="#enchants">エンチャント</a></li>
+        <li><a href="#commands">コマンド</a></li>
+        <li><a href="#rules">ルール</a></li>
+        <li><a href="#join">参加方法</a></li>
+        <li><a href="#faq">FAQ</a></li>
+    </ul>
+</nav>
+
+<section class="hero">
+    <div class="hero-logo">RetBareServer</div>
+    <p class="hero-tagline">PVPもサバイバルも、全部ここで。</p>
+    <div class="hero-buttons">
+        <a href="https://discord.gg/2v7JbraYBY" class="btn btn-primary" target="_blank">Discordに参加</a>
+        <a href="#join" class="btn btn-accent">今すぐ参加する</a>
+    </div>
+    <div class="ip-group">
+        <div class="server-ip" onclick="navigator.clipboard.writeText('110.67.56.168:25565')">
+            <div><span class="label">Java版（推奨）- クリックでコピー</span><br>110.67.56.168:25565</div>
+        </div>
+        <div class="server-ip" onclick="navigator.clipboard.writeText('110.67.56.168:19132')" style="opacity:0.6">
+            <div><span class="label">統合版（非推奨）- クリックでコピー</span><br>110.67.56.168:19132</div>
+        </div>
+    </div>
+</section>
+
+<section id="games">
+    <h2 class="section-title">GAME MODES</h2>
+    <p class="section-sub">すべてのゲームモードは /rmenu から移動できます</p>
+    <div class="game-grid">
+        <div class="game-card">
+            <div class="card-icon">🛏️</div>
+            <h3>BedWars</h3>
+            <span class="card-tag tag-pvp">PVP</span>
+            <p>ベッドを守りながら相手チームを全滅させる対人戦。TNT羊など独自アイテムが多数登場する、RetBareServer自慢のゲームモード。</p>
+            <div class="reward">勝利ボーナス: 1,028円 ｜ ベッド破壊: 1,000円</div>
+        </div>
+        <div class="game-card">
+            <div class="card-icon">⚔️</div>
+            <h3>SkyWars</h3>
+            <span class="card-tag tag-pvp">バトロワ</span>
+            <p>空島スタートのバトルロイヤル。盲目の剣など、このサーバーだけのオリジナルKITで最後の1人を目指せ。10種類以上のKITを用意。</p>
+        </div>
+        <div class="game-card">
+            <div class="card-icon">🌿</div>
+            <h3>サバイバル</h3>
+            <span class="card-tag tag-survival">経済サバイバル</span>
+            <p>独自経済・ガチャ・オークション・SmartSpawner・カスタムエンチャント73種。充実したサバイバル生活を送ろう。カスタムモブも出現。</p>
+        </div>
+        <div class="game-card">
+            <div class="card-icon">🧊</div>
+            <h3>OneBlock</h3>
+            <span class="card-tag tag-creative">建築</span>
+            <p>足元のたった1ブロックから始まる世界。壊すたびに新しいブロックやアイテムが出現。集めた素材で拠点を拡張していこう。</p>
+        </div>
+        <div class="game-card">
+            <div class="card-icon">💣</div>
+            <h3>TNT Run</h3>
+            <span class="card-tag tag-minigame">ミニゲーム</span>
+            <p>TNTの上を走り続けろ！足元のブロックが次々消えていく中、最後まで落ちなかったプレイヤーが勝利。</p>
+        </div>
+        <div class="game-card">
+            <div class="card-icon">🗡️</div>
+            <h3>Mace PvP</h3>
+            <span class="card-tag tag-pvp">PVP ARENA</span>
+            <p>メイスを使った対戦モード。PvPArenaで手軽にバトル。</p>
+        </div>
+        <div class="game-card">
+            <div class="card-icon">⚔️</div>
+            <h3>Sword PvP</h3>
+            <span class="card-tag tag-pvp">PVP ARENA</span>
+            <p>剣を使った近接戦闘。シンプルだけど奥が深い1v1バトル。</p>
+        </div>
+        <div class="game-card">
+            <div class="card-icon">🪓</div>
+            <h3>Axe PvP</h3>
+            <span class="card-tag tag-pvp">PVP ARENA</span>
+            <p>斧を使った重量級の近接対戦。盾を割って勝利を掴め。</p>
+        </div>
+        <div class="game-card">
+            <div class="card-icon">🎯</div>
+            <h3>Duel</h3>
+            <span class="card-tag tag-pvp">PVP</span>
+            <p>1v1の決闘モード。実力で勝負を決めろ。</p>
+        </div>
+        <div class="game-card">
+            <div class="card-icon">🤖</div>
+            <h3>PracticeBot</h3>
+            <span class="card-tag tag-minigame">練習</span>
+            <p>Bot相手にPvPの練習ができる。スキルを磨きたいときに。</p>
+        </div>
+    </div>
+</section>
+
+<section id="economy">
+    <h2 class="section-title">ECONOMY</h2>
+    <p class="section-sub">稼いで、買って、強くなれ</p>
+    <div class="economy-flow">
+        <div class="flow-step">
+            <div class="step-num">1</div>
+            <h4>木を伐ったり鉱石を掘る</h4>
+            <p>/warp shop でShopへ移動。蜂（ハチ）のNPCに右クリックで素材を売却。「YOUPRICE」の金額が手に入る。</p>
+        </div>
+        <div class="flow-step">
+            <div class="step-num">2</div>
+            <h4>ショップ・ガチャで強化</h4>
+            <p>/shop で3×3ツルハシなどの神アイテムを購入。5種類のガチャで最強装備を狙え。</p>
+        </div>
+        <div class="flow-step">
+            <div class="step-num">3</div>
+            <h4>オークションで取引</h4>
+            <p>/ah でプレイヤー間取引。手持ちアイテムを /ah sell [値段] で出品。</p>
+        </div>
+        <div class="flow-step">
+            <div class="step-num">4</div>
+            <h4>BedWarsで稼ぐ</h4>
+            <p>勝利で1,028円、ベッド破壊で1,000円。PvPしながら効率よく稼げる。</p>
+        </div>
+    </div>
+    <div class="feature-highlight">
+        <h3>MobCoin</h3>
+        <p>モブを倒すと獲得できる特殊通貨。通常の円とは別の通貨体系で、/mc で確認、/mc shop でSmartSpawnerなどの限定アイテムを購入できる。/mobcoins pay で他のプレイヤーに送金、/mobcoins top でランキングを確認。</p>
+    </div>
+    <div class="feature-highlight">
+        <h3>SmartSpawner</h3>
+        <p>通常のスポナーの超強化版。実際にモブをスポーンさせず、ドロップアイテムとXPを仮想的に自動生成する。サーバー負荷ゼロでラグなし。右クリックでGUIを開いてアイテム一括回収、ホッパーでチェストへ自動搬出も可能。スポナー同士をスタック（重ね置き）して効率アップ。入手はスポナーガチャまたはMobCoin Shop。</p>
+    </div>
+    <h3 style="text-align:center; margin-top:2rem; font-weight:900;">独自アイテム</h3>
+    <div class="items-showcase">
+        <div class="item-card">
+            <h4>リカバリートーテム</h4>
+            <p>インベントリに入れて死亡するとトーテム自体は消費されるが、それ以外の全アイテムを保持。ハズレでも当たり。</p>
+            <div class="item-price">2,000円（Shop） / マジックガチャ</div>
+        </div>
+        <div class="item-card">
+            <h4>3×3 アメジストのツルハシ</h4>
+            <p>3×3の9ブロックを一度に採掘できる最強ツルハシ。</p>
+            <div class="item-price">35,000円</div>
+        </div>
+        <div class="item-card">
+            <h4>一括破壊の斧</h4>
+            <p>原木を1ブロック壊すと木全体を一気に伐採。</p>
+            <div class="item-price">35,000円</div>
+        </div>
+        <div class="item-card">
+            <h4>アメジストチェストプレート</h4>
+            <p>着ていると体力が2倍になる紫色の特殊防具。</p>
+            <div class="item-price">35,000円</div>
+        </div>
+    </div>
+</section>
+
+<section id="shop">
+    <h2 class="section-title">SHOP</h2>
+    <p class="section-sub">/shop でGUIを開く ｜ /warp shop で直接移動</p>
+    <div class="shop-category">
+        <h3>🥩 食べ物</h3>
+        <table><tr><th>アイテム</th><th>価格</th></tr>
+        <tr><td>ステーキ ×64</td><td class="price">1,000円</td></tr>
+        <tr><td>金のニンジン ×64</td><td class="price">2,000円</td></tr>
+        <tr><td>金のリンゴ ×1</td><td class="price">5,000円</td></tr>
+        <tr><td>エンチャント金のリンゴ ×64</td><td class="price">500,000円</td></tr></table>
+    </div>
+    <div class="shop-category">
+        <h3>⛏️ 鉱石</h3>
+        <table><tr><th>アイテム</th><th>価格</th></tr>
+        <tr><td>石炭</td><td class="price">4円</td></tr>
+        <tr><td>銅インゴット</td><td class="price">16円</td></tr>
+        <tr><td>鉄インゴット</td><td class="price">64円</td></tr>
+        <tr><td>エメラルド</td><td class="price">256円</td></tr>
+        <tr><td>ダイヤモンド</td><td class="price">1,024円</td></tr></table>
+    </div>
+    <div class="shop-category">
+        <h3>🧪 魔道具</h3>
+        <table><tr><th>アイテム</th><th>価格</th></tr>
+        <tr><td>リカバリートーテム</td><td class="price">2,000円</td></tr>
+        <tr><td>アメジストチェストプレート（体力2倍）</td><td class="price">35,000円</td></tr>
+        <tr><td>3×3 アメジストのツルハシ</td><td class="price">35,000円</td></tr>
+        <tr><td>一括破壊の斧</td><td class="price">35,000円</td></tr>
+        <tr><td>ネザライト装備一式</td><td class="price">500,000円</td></tr></table>
+    </div>
+    <div class="shop-category">
+        <h3>🏹 弓</h3>
+        <table><tr><th>アイテム</th><th>価格</th></tr>
+        <tr><td>雷の弓</td><td class="price">5,000円</td></tr>
+        <tr><td>ドラゴンの弓</td><td class="price">5,000円</td></tr>
+        <tr><td>TNTの弓</td><td class="price">5,000円</td></tr>
+        <tr><td>エンダーパールの弓</td><td class="price">8,000円</td></tr>
+        <tr><td>ホバーの弓</td><td class="price">10,000円</td></tr></table>
+    </div>
+    <div class="shop-category">
+        <h3>🥚 スポーンエッグ</h3>
+        <table><tr><th>アイテム</th><th>価格</th></tr>
+        <tr><td>牛のスポーンエッグ</td><td class="price">100円</td></tr>
+        <tr><td>羊のスポーンエッグ</td><td class="price">100円</td></tr>
+        <tr><td>ニワトリのスポーンエッグ</td><td class="price">1,000円</td></tr>
+        <tr><td>クリーパーのスポーンエッグ</td><td class="price">1,000円</td></tr>
+        <tr><td>スケルトンのスポーンエッグ</td><td class="price">1,000円</td></tr>
+        <tr><td>村人のスポーンエッグ</td><td class="price">2,000円</td></tr>
+        <tr><td>村人ゾンビのスポーンエッグ</td><td class="price">7,000円</td></tr>
+        <tr><td>ウォーデンのスポーンエッグ</td><td class="price">7,500円</td></tr></table>
+    </div>
+</section>
+
+<section id="gacha">
+    <h2 class="section-title">GACHA</h2>
+    <p class="section-sub">5種類のガチャで最強を目指せ</p>
+    <div class="gacha-grid">
+        <div class="gacha-card">
+            <h3>💎 ダイヤモンドガチャ</h3>
+            <div class="gacha-price">3,000円</div>
+            <p class="gacha-desc">ダイヤモンド装備系アイテムがランダムで排出。ダイヤの馬鎧なども出てくる。</p>
+            <p class="gacha-desc" style="font-size:0.8rem; margin-top:0.5rem;">📍 ウーパールーパーのショップ（ネザライトブロック周辺）</p>
+        </div>
+        <div class="gacha-card">
+            <h3>👑 ネザライトガチャ</h3>
+            <div class="gacha-price">10,000円</div>
+            <p class="gacha-desc">最上位のネザライト装備系アイテムがランダム排出。最高級の装備を狙え。</p>
+        </div>
+        <div class="gacha-card">
+            <h3>✨ マジックガチャ</h3>
+            <div class="gacha-price">5,000円（直接開封）</div>
+            <p class="gacha-desc">当たり: チェスト保持斧、3×3ツルハシなど。ハズレ: リカバリートーテム（ハズレでも十分強い）。</p>
+            <p class="gacha-desc" style="font-size:0.8rem; margin-top:0.5rem;">📍 Shopスポーン地点の左、シュルカーボックス5個の場所</p>
+        </div>
+        <div class="gacha-card">
+            <h3>🔮 エンチャントガチャ</h3>
+            <div class="gacha-price">5,000円（直接開封）</div>
+            <p class="gacha-desc">サーバー独自のカスタムエンチャントがランダム排出。矢がエンダーパールに変わる弓用エンチャントなど。全て日本語説明付き。</p>
+        </div>
+        <div class="gacha-card">
+            <h3>🥚 スポナーガチャ</h3>
+            <div class="gacha-price">12,500円（キーで開封）</div>
+            <p class="gacha-desc">SmartSpawnerがランダム排出。キーを購入して開封するタイプの高級ガチャ。</p>
+        </div>
+    </div>
+</section>
+
+<section id="enchants">
+    <h2 class="section-title">CUSTOM ENCHANTMENTS</h2>
+    <p class="section-sub">73種の独自カスタムエンチャント ｜ 全て日本語説明付き</p>
+    <div class="enchant-tabs">
+        <div class="enchant-tab active" onclick="showTab('armor')">防具 (18)</div>
+        <div class="enchant-tab" onclick="showTab('bow')">弓 (15)</div>
+        <div class="enchant-tab" onclick="showTab('tool')">ツール (12)</div>
+        <div class="enchant-tab" onclick="showTab('fishing')">釣り竿 (6)</div>
+        <div class="enchant-tab" onclick="showTab('weapon')">武器 (24)</div>
+        <div class="enchant-tab" onclick="showTab('universal')">汎用 (6)</div>
+    </div>
+
+    <div class="enchant-panel active" id="tab-armor">
+        <div class="enchant-item"><div><span class="enchant-name">Cold Steel</span> <span class="enchant-jp">コールドスチール</span><div class="enchant-desc">攻撃してきた相手に採掘速度低下を付与する</div></div><div class="enchant-meta"><span class="lv">最大Lv III</span></div></div>
+        <div class="enchant-item"><div><span class="enchant-name">Darkness Cloak</span> <span class="enchant-jp">闇のマント</span><div class="enchant-desc">攻撃してきた相手に暗闇効果を付与する</div></div><div class="enchant-meta"><span class="lv">最大Lv III</span></div></div>
+        <div class="enchant-item"><div><span class="enchant-name">Dragon Heart</span> <span class="enchant-jp">ドラゴンハート</span><div class="enchant-desc">装備中、体力増強のパッシブ効果を得る</div></div><div class="enchant-meta"><span class="lv">最大Lv V</span></div></div>
+        <div class="enchant-item"><div><span class="enchant-name">Elemental Protection</span> <span class="enchant-jp">エレメンタルプロテクション</span><div class="enchant-desc">ポーションや属性ダメージを軽減する</div></div><div class="enchant-meta"><span class="lv">最大Lv IV</span></div></div>
+        <div class="enchant-item"><div><span class="enchant-name">Fire Shield</span> <span class="enchant-jp">ファイアシールド</span><div class="enchant-desc">攻撃してきた相手を発火させる</div></div><div class="enchant-meta"><span class="lv">最大Lv IV</span></div></div>
+        <div class="enchant-item"><div><span class="enchant-name">Flame Walker</span> <span class="enchant-jp">フレイムウォーカー</span><div class="enchant-desc">溶岩の上を歩けるようになり、マグマブロックのダメージを無効化する</div></div><div class="enchant-meta"><span class="lv">最大Lv II</span></div></div>
+        <div class="enchant-item"><div><span class="enchant-name">Hardened</span> <span class="enchant-jp">ハードンド</span><div class="enchant-desc">ダメージを受けた時に耐性効果を付与する</div></div><div class="enchant-meta"><span class="lv">最大Lv II</span></div></div>
+        <div class="enchant-item"><div><span class="enchant-name">Ice Shield</span> <span class="enchant-jp">アイスシールド</span><div class="enchant-desc">攻撃してきた相手を凍結させ、鈍足を付与する</div></div><div class="enchant-meta"><span class="lv">最大Lv III</span></div></div>
+        <div class="enchant-item"><div><span class="enchant-name">Jumping</span> <span class="enchant-jp">ジャンピング</span><div class="enchant-desc">跳躍力上昇効果を付与する（ブーツ）</div></div><div class="enchant-meta"><span class="lv">最大Lv II</span></div></div>
+        <div class="enchant-item"><div><span class="enchant-name">Kamikadze</span> <span class="enchant-jp">カミカゼ</span><div class="enchant-desc">死亡時に爆発を起こす</div></div><div class="enchant-meta"><span class="lv">最大Lv III</span></div></div>
+        <div class="enchant-item"><div><span class="enchant-name">Lightweight</span> <span class="enchant-jp">ライトウェイト</span><div class="enchant-desc">カメの卵・農地・大きなドリップリーフを踏んでも壊さなくなる（ブーツ）</div></div><div class="enchant-meta"><span class="lv">最大Lv I</span></div></div>
+        <div class="enchant-item"><div><span class="enchant-name">Night Vision</span> <span class="enchant-jp">ナイトビジョン</span><div class="enchant-desc">暗視効果を付与する（ヘルメット）</div></div><div class="enchant-meta"><span class="lv">最大Lv I</span></div></div>
+        <div class="enchant-item"><div><span class="enchant-name">Rebound</span> <span class="enchant-jp">リバウンド</span><div class="enchant-desc">スライムブロックのように跳ね返る効果を得る（ブーツ）</div></div><div class="enchant-meta"><span class="lv">最大Lv I</span></div></div>
+        <div class="enchant-item"><div><span class="enchant-name">Regrowth</span> <span class="enchant-jp">リグロウス</span><div class="enchant-desc">時間経過で体力を回復する</div></div><div class="enchant-meta"><span class="lv">最大Lv IV</span></div></div>
+        <div class="enchant-item"><div><span class="enchant-name">Saturation</span> <span class="enchant-jp">サチュレーション</span><div class="enchant-desc">時間経過で空腹を回復する（ヘルメット）</div></div><div class="enchant-meta"><span class="lv">最大Lv II</span></div></div>
+        <div class="enchant-item"><div><span class="enchant-name">Speed</span> <span class="enchant-jp">スピード</span><div class="enchant-desc">移動速度上昇効果を付与する（ブーツ）</div></div><div class="enchant-meta"><span class="lv">最大Lv II</span></div></div>
+        <div class="enchant-item"><div><span class="enchant-name">Stopping Force</span> <span class="enchant-jp">ストッピングフォース</span><div class="enchant-desc">ダメージを受けた時のノックバックを軽減する（チェストプレート）</div></div><div class="enchant-meta"><span class="lv">最大Lv III</span></div></div>
+        <div class="enchant-item"><div><span class="enchant-name">Water Breathing</span> <span class="enchant-jp">ウォーターブリージング</span><div class="enchant-desc">水中呼吸効果を付与する（ヘルメット）</div></div><div class="enchant-meta"><span class="lv">最大Lv I</span></div></div>
+    </div>
+
+    <div class="enchant-panel" id="tab-bow">
+        <div class="enchant-item"><div><span class="enchant-name">Bomber</span> <span class="enchant-jp">ボマー</span><div class="enchant-desc">矢の代わりにTNTを射出する</div></div><div class="enchant-meta"><span class="lv">最大Lv III</span></div></div>
+        <div class="enchant-item"><div><span class="enchant-name">Confusing Arrows</span> <span class="enchant-jp">混乱の矢</span><div class="enchant-desc">矢に吐き気効果を付与する</div></div><div class="enchant-meta"><span class="lv">最大Lv III</span></div></div>
+        <div class="enchant-item"><div><span class="enchant-name">Darkness Arrows</span> <span class="enchant-jp">暗闇の矢</span><div class="enchant-desc">矢に暗闇効果を付与する</div></div><div class="enchant-meta"><span class="lv">最大Lv III</span></div></div>
+        <div class="enchant-item"><div><span class="enchant-name">Dragonfire Arrows</span> <span class="enchant-jp">ドラゴンブレスの矢</span><div class="enchant-desc">矢にドラゴンブレスの範囲効果を付与する</div></div><div class="enchant-meta"><span class="lv">最大Lv III</span></div></div>
+        <div class="enchant-item"><div><span class="enchant-name">Electrified Arrows</span> <span class="enchant-jp">帯電の矢</span><div class="enchant-desc">矢が命中した場所に雷を落とす</div></div><div class="enchant-meta"><span class="lv">最大Lv III</span></div></div>
+        <div class="enchant-item"><div><span class="enchant-name">Ender Bow</span> <span class="enchant-jp">エンダーボウ</span><div class="enchant-desc">矢の代わりにエンダーパールを射出する</div></div><div class="enchant-meta"><span class="lv">最大Lv I</span></div></div>
+        <div class="enchant-item"><div><span class="enchant-name">Explosive Arrows</span> <span class="enchant-jp">爆裂の矢</span><div class="enchant-desc">矢が命中時に爆発する</div></div><div class="enchant-meta"><span class="lv">最大Lv III</span></div></div>
+        <div class="enchant-item"><div><span class="enchant-name">Flare</span> <span class="enchant-jp">フレア</span><div class="enchant-desc">矢が着地した場所に松明を設置する</div></div><div class="enchant-meta"><span class="lv">最大Lv I</span></div></div>
+        <div class="enchant-item"><div><span class="enchant-name">Ghast</span> <span class="enchant-jp">ガスト</span><div class="enchant-desc">矢の代わりにファイアボールを射出する</div></div><div class="enchant-meta"><span class="lv">最大Lv I</span></div></div>
+        <div class="enchant-item"><div><span class="enchant-name">Hover</span> <span class="enchant-jp">ホバー</span><div class="enchant-desc">矢に浮遊効果を付与する</div></div><div class="enchant-meta"><span class="lv">最大Lv III</span></div></div>
+        <div class="enchant-item"><div><span class="enchant-name">Lingering</span> <span class="enchant-jp">リンガリング</span><div class="enchant-desc">矢が命中した場所に残留ポーション雲を発生させる</div></div><div class="enchant-meta"><span class="lv">最大Lv III</span></div></div>
+        <div class="enchant-item"><div><span class="enchant-name">Poisoned Arrows</span> <span class="enchant-jp">毒の矢</span><div class="enchant-desc">矢に毒効果を付与する</div></div><div class="enchant-meta"><span class="lv">最大Lv III</span></div></div>
+        <div class="enchant-item"><div><span class="enchant-name">Sniper</span> <span class="enchant-jp">スナイパー</span><div class="enchant-desc">矢の飛翔速度を上げる</div></div><div class="enchant-meta"><span class="lv">最大Lv II</span></div></div>
+        <div class="enchant-item"><div><span class="enchant-name">Vampiric Arrows</span> <span class="enchant-jp">吸血の矢</span><div class="enchant-desc">矢が命中すると体力を回復する</div></div><div class="enchant-meta"><span class="lv">最大Lv III</span></div></div>
+        <div class="enchant-item"><div><span class="enchant-name">Withered Arrows</span> <span class="enchant-jp">ウィザーの矢</span><div class="enchant-desc">矢にウィザー効果を付与する</div></div><div class="enchant-meta"><span class="lv">最大Lv III</span></div></div>
+    </div>
+
+    <div class="enchant-panel" id="tab-tool">
+        <div class="enchant-item"><div><span class="enchant-name">Blast Mining</span> <span class="enchant-jp">ブラストマイニング</span><div class="enchant-desc">爆発でブロックを採掘する</div></div><div class="enchant-meta"><span class="lv">最大Lv V</span></div></div>
+        <div class="enchant-item"><div><span class="enchant-name">Glass Breaker</span> <span class="enchant-jp">グラスブレイカー</span><div class="enchant-desc">ガラスを一瞬で破壊する</div></div><div class="enchant-meta"><span class="lv">最大Lv I</span></div></div>
+        <div class="enchant-item"><div><span class="enchant-name">Haste</span> <span class="enchant-jp">ヘイスト</span><div class="enchant-desc">採掘時に採掘速度上昇効果を付与する</div></div><div class="enchant-meta"><span class="lv">最大Lv III</span></div></div>
+        <div class="enchant-item"><div><span class="enchant-name">Lucky Miner</span> <span class="enchant-jp">ラッキーマイナー</span><div class="enchant-desc">鉱石から得られる経験値が増加する</div></div><div class="enchant-meta"><span class="lv">最大Lv III</span></div></div>
+        <div class="enchant-item"><div><span class="enchant-name">Replanter</span> <span class="enchant-jp">リプランター</span><div class="enchant-desc">作物を収穫すると自動的に再植え付けする</div></div><div class="enchant-meta"><span class="lv">最大Lv I</span></div></div>
+        <div class="enchant-item"><div><span class="enchant-name">Silk Chest</span> <span class="enchant-jp">シルクチェスト</span><div class="enchant-desc">チェストを中身ごとドロップさせる</div></div><div class="enchant-meta"><span class="lv">最大Lv I</span></div></div>
+        <div class="enchant-item"><div><span class="enchant-name">Silk Spawner</span> <span class="enchant-jp">シルクスポナー</span><div class="enchant-desc">スポナーをシルクタッチでドロップさせる（確率）</div></div><div class="enchant-meta"><span class="lv">最大Lv I</span></div></div>
+        <div class="enchant-item"><div><span class="enchant-name">Smelter</span> <span class="enchant-jp">スメルター</span><div class="enchant-desc">ドロップアイテムを自動精錬する</div></div><div class="enchant-meta"><span class="lv">最大Lv V</span></div></div>
+        <div class="enchant-item"><div><span class="enchant-name">Telekinesis</span> <span class="enchant-jp">テレキネシス</span><div class="enchant-desc">採掘したドロップを直接インベントリに入れる</div></div><div class="enchant-meta"><span class="lv">最大Lv I</span></div></div>
+        <div class="enchant-item"><div><span class="enchant-name">Treefeller</span> <span class="enchant-jp">ツリーフェラー</span><div class="enchant-desc">木を丸ごと一括伐採する</div></div><div class="enchant-meta"><span class="lv">最大Lv I</span></div></div>
+        <div class="enchant-item"><div><span class="enchant-name">Tunnel</span> <span class="enchant-jp">トンネル</span><div class="enchant-desc">1×2 / 2×2 / 3×3 の範囲採掘を行う</div></div><div class="enchant-meta"><span class="lv">最大Lv III</span></div></div>
+        <div class="enchant-item"><div><span class="enchant-name">Veinminer</span> <span class="enchant-jp">ヴェインマイナー</span><div class="enchant-desc">鉱脈を一括採掘する</div></div><div class="enchant-meta"><span class="lv">最大Lv III</span></div></div>
+    </div>
+
+    <div class="enchant-panel" id="tab-fishing">
+        <div class="enchant-item"><div><span class="enchant-name">Auto Reel</span> <span class="enchant-jp">オートリール</span><div class="enchant-desc">魚がかかると自動で巻き上げる</div></div><div class="enchant-meta"><span class="lv">最大Lv I</span></div></div>
+        <div class="enchant-item"><div><span class="enchant-name">Curse of Drowned</span> <span class="enchant-jp">溺死の呪い</span><div class="enchant-desc">釣りをするとドラウンドが釣れることがある</div></div><div class="enchant-meta"><span class="lv">最大Lv III</span></div></div>
+        <div class="enchant-item"><div><span class="enchant-name">Double Catch</span> <span class="enchant-jp">ダブルキャッチ</span><div class="enchant-desc">釣ったアイテムが2倍になる</div></div><div class="enchant-meta"><span class="lv">最大Lv III</span></div></div>
+        <div class="enchant-item"><div><span class="enchant-name">River Master</span> <span class="enchant-jp">リバーマスター</span><div class="enchant-desc">キャスト距離が伸びる</div></div><div class="enchant-meta"><span class="lv">最大Lv V</span></div></div>
+        <div class="enchant-item"><div><span class="enchant-name">Seasoned Angler</span> <span class="enchant-jp">熟練の釣り師</span><div class="enchant-desc">釣りで得られる経験値が増加する</div></div><div class="enchant-meta"><span class="lv">最大Lv III</span></div></div>
+        <div class="enchant-item"><div><span class="enchant-name">Survivalist</span> <span class="enchant-jp">サバイバリスト</span><div class="enchant-desc">生魚が釣れると自動的に焼き魚にする</div></div><div class="enchant-meta"><span class="lv">最大Lv I</span></div></div>
+    </div>
+
+    <div class="enchant-panel" id="tab-weapon">
+        <div class="enchant-item"><div><span class="enchant-name">Bane of Netherspawn</span> <span class="enchant-jp">ネザーモブ特効</span><div class="enchant-desc">ネザーのモブへのダメージが増加する</div></div><div class="enchant-meta"><span class="lv">最大Lv V</span></div></div>
+        <div class="enchant-item"><div><span class="enchant-name">Blindness</span> <span class="enchant-jp">盲目</span><div class="enchant-desc">攻撃した相手に盲目効果を付与する</div></div><div class="enchant-meta"><span class="lv">最大Lv II</span></div></div>
+        <div class="enchant-item"><div><span class="enchant-name">Confusion</span> <span class="enchant-jp">混乱</span><div class="enchant-desc">攻撃した相手に吐き気効果を付与する</div></div><div class="enchant-meta"><span class="lv">最大Lv II</span></div></div>
+        <div class="enchant-item"><div><span class="enchant-name">Cure</span> <span class="enchant-jp">キュア</span><div class="enchant-desc">ゾンビピグリンやゾンビ村人を倒すと治療する</div></div><div class="enchant-meta"><span class="lv">最大Lv III</span></div></div>
+        <div class="enchant-item"><div><span class="enchant-name">Curse of Death</span> <span class="enchant-jp">死の呪い</span><div class="enchant-desc">プレイヤーをキルした時に自分も死亡する確率がある</div></div><div class="enchant-meta"><span class="lv">最大Lv III</span></div></div>
+        <div class="enchant-item"><div><span class="enchant-name">Cutter</span> <span class="enchant-jp">カッター</span><div class="enchant-desc">相手の防具にダメージを与えて剥がす</div></div><div class="enchant-meta"><span class="lv">最大Lv III</span></div></div>
+        <div class="enchant-item"><div><span class="enchant-name">Decapitator</span> <span class="enchant-jp">デカピテイター</span><div class="enchant-desc">倒したモブ/プレイヤーの頭をドロップさせる</div></div><div class="enchant-meta"><span class="lv">最大Lv II</span></div></div>
+        <div class="enchant-item"><div><span class="enchant-name">Double Strike</span> <span class="enchant-jp">ダブルストライク</span><div class="enchant-desc">ダメージが2倍になる確率がある</div></div><div class="enchant-meta"><span class="lv">最大Lv II</span></div></div>
+        <div class="enchant-item"><div><span class="enchant-name">Exhaust</span> <span class="enchant-jp">エキゾースト</span><div class="enchant-desc">攻撃した相手に空腹効果を付与する</div></div><div class="enchant-meta"><span class="lv">最大Lv IV</span></div></div>
+        <div class="enchant-item"><div><span class="enchant-name">Ice Aspect</span> <span class="enchant-jp">アイスアスペクト</span><div class="enchant-desc">攻撃した相手を凍結させ、鈍足を付与する</div></div><div class="enchant-meta"><span class="lv">最大Lv III</span></div></div>
+        <div class="enchant-item"><div><span class="enchant-name">Infernus</span> <span class="enchant-jp">インフェルヌス</span><div class="enchant-desc">トライデントで攻撃した相手を発火させる</div></div><div class="enchant-meta"><span class="lv">最大Lv III</span></div></div>
+        <div class="enchant-item"><div><span class="enchant-name">Nimble</span> <span class="enchant-jp">ニンブル</span><div class="enchant-desc">モブのドロップアイテムを直接インベントリに入れる</div></div><div class="enchant-meta"><span class="lv">最大Lv I</span></div></div>
+        <div class="enchant-item"><div><span class="enchant-name">Paralyze</span> <span class="enchant-jp">パラライズ</span><div class="enchant-desc">攻撃した相手に採掘速度低下を付与する</div></div><div class="enchant-meta"><span class="lv">最大Lv V</span></div></div>
+        <div class="enchant-item"><div><span class="enchant-name">Rage</span> <span class="enchant-jp">レイジ</span><div class="enchant-desc">戦闘中に攻撃力上昇効果を付与する</div></div><div class="enchant-meta"><span class="lv">最大Lv II</span></div></div>
+        <div class="enchant-item"><div><span class="enchant-name">Rocket</span> <span class="enchant-jp">ロケット</span><div class="enchant-desc">攻撃した相手を空中に打ち上げる</div></div><div class="enchant-meta"><span class="lv">最大Lv III</span></div></div>
+        <div class="enchant-item"><div><span class="enchant-name">Swiper</span> <span class="enchant-jp">スワイパー</span><div class="enchant-desc">攻撃した相手の経験値を盗む</div></div><div class="enchant-meta"><span class="lv">最大Lv III</span></div></div>
+        <div class="enchant-item"><div><span class="enchant-name">Temper</span> <span class="enchant-jp">テンパー</span><div class="enchant-desc">自分の体力が低いほどダメージが増加する</div></div><div class="enchant-meta"><span class="lv">最大Lv V</span></div></div>
+        <div class="enchant-item"><div><span class="enchant-name">Thrifty</span> <span class="enchant-jp">スリフティ</span><div class="enchant-desc">モブを倒すとスポーンエッグをドロップする（確率）</div></div><div class="enchant-meta"><span class="lv">最大Lv III</span></div></div>
+        <div class="enchant-item"><div><span class="enchant-name">Thunder</span> <span class="enchant-jp">サンダー</span><div class="enchant-desc">攻撃した相手に雷を落とし、追加ダメージを与える</div></div><div class="enchant-meta"><span class="lv">最大Lv V</span></div></div>
+        <div class="enchant-item"><div><span class="enchant-name">Vampire</span> <span class="enchant-jp">ヴァンパイア</span><div class="enchant-desc">攻撃した相手から体力を吸収する</div></div><div class="enchant-meta"><span class="lv">最大Lv III</span></div></div>
+        <div class="enchant-item"><div><span class="enchant-name">Venom</span> <span class="enchant-jp">ヴェノム</span><div class="enchant-desc">攻撃した相手に毒効果を付与する</div></div><div class="enchant-meta"><span class="lv">最大Lv II</span></div></div>
+        <div class="enchant-item"><div><span class="enchant-name">Village Defender</span> <span class="enchant-jp">村の守護者</span><div class="enchant-desc">イリジャーへのダメージが増加する</div></div><div class="enchant-meta"><span class="lv">最大Lv V</span></div></div>
+        <div class="enchant-item"><div><span class="enchant-name">Wisdom</span> <span class="enchant-jp">ウィズダム</span><div class="enchant-desc">モブから得られる経験値が増加する</div></div><div class="enchant-meta"><span class="lv">最大Lv V</span></div></div>
+        <div class="enchant-item"><div><span class="enchant-name">Wither</span> <span class="enchant-jp">ウィザー</span><div class="enchant-desc">攻撃した相手にウィザー効果を付与する</div></div><div class="enchant-meta"><span class="lv">最大Lv II</span></div></div>
+    </div>
+
+    <div class="enchant-panel" id="tab-universal">
+        <div class="enchant-item"><div><span class="enchant-name">Curse of Breaking</span> <span class="enchant-jp">破壊の呪い</span><div class="enchant-desc">使用時に耐久値がより多く減る</div></div><div class="enchant-meta"><span class="lv">最大Lv III</span></div></div>
+        <div class="enchant-item"><div><span class="enchant-name">Curse of Fragility</span> <span class="enchant-jp">脆弱の呪い</span><div class="enchant-desc">砥石や金床での操作ができなくなる</div></div><div class="enchant-meta"><span class="lv">最大Lv I</span></div></div>
+        <div class="enchant-item"><div><span class="enchant-name">Curse of Mediocrity</span> <span class="enchant-jp">凡庸の呪い</span><div class="enchant-desc">ドロップからエンチャントを除去する</div></div><div class="enchant-meta"><span class="lv">最大Lv III</span></div></div>
+        <div class="enchant-item"><div><span class="enchant-name">Curse of Misfortune</span> <span class="enchant-jp">不運の呪い</span><div class="enchant-desc">ドロップ量がゼロになる</div></div><div class="enchant-meta"><span class="lv">最大Lv III</span></div></div>
+        <div class="enchant-item"><div><span class="enchant-name">Restore</span> <span class="enchant-jp">リストア</span><div class="enchant-desc">アイテムが壊れる直前に1度だけ破壊を防ぐ</div></div><div class="enchant-meta"><span class="lv">最大Lv III</span></div></div>
+        <div class="enchant-item"><div><span class="enchant-name">Soulbound</span> <span class="enchant-jp">ソウルバウンド</span><div class="enchant-desc">死亡してもアイテムをドロップしない</div></div><div class="enchant-meta"><span class="lv">最大Lv I</span></div></div>
+    </div>
+</section>
+
+<section id="commands">
+    <h2 class="section-title">COMMANDS</h2>
+    <p class="section-sub">知っておきたい便利コマンド</p>
+    <div class="cmd-grid">
+        <div class="cmd-group">
+            <h3>🚀 移動系</h3>
+            <div class="cmd-item"><code>/rmenu</code><span>統合メニュー（各ワールドへ移動）</span></div>
+            <div class="cmd-item"><code>/sethome</code><span>現在地をホームに登録</span></div>
+            <div class="cmd-item"><code>/home</code><span>登録したホームへテレポート</span></div>
+            <div class="cmd-item"><code>/tpa [名前]</code><span>テレポートリクエスト送信</span></div>
+            <div class="cmd-item"><code>/tpaccept</code><span>テレポートリクエスト承認</span></div>
+            <div class="cmd-item"><code>/tpdeny</code><span>テレポートリクエスト拒否</span></div>
+            <div class="cmd-item"><code>/back</code><span>直前の場所に戻る</span></div>
+            <div class="cmd-item"><code>/spawn</code><span>スポーン地点に戻る</span></div>
+            <div class="cmd-item"><code>/warp shop</code><span>ショップへ直接移動</span></div>
+        </div>
+        <div class="cmd-group">
+            <h3>💰 経済系</h3>
+            <div class="cmd-item"><code>/money</code><span>所持金を確認</span></div>
+            <div class="cmd-item"><code>/bal</code><span>所持金を確認（同等）</span></div>
+            <div class="cmd-item"><code>/pay [名前] [金額]</code><span>送金</span></div>
+            <div class="cmd-item"><code>/shop</code><span>ショップGUIを開く</span></div>
+            <div class="cmd-item"><code>/ah</code><span>オークション画面を開く</span></div>
+            <div class="cmd-item"><code>/ah sell [値段]</code><span>手持ちアイテムを出品</span></div>
+            <div class="cmd-item"><code>/mc</code><span>MobCoin残高を確認</span></div>
+            <div class="cmd-item"><code>/mc shop</code><span>MobCoinショップを開く</span></div>
+            <div class="cmd-item"><code>/mobcoins pay [名前] [金額]</code><span>MobCoinを送金</span></div>
+            <div class="cmd-item"><code>/mobcoins top</code><span>MobCoinランキング</span></div>
+        </div>
+        <div class="cmd-group">
+            <h3>🎒 便利系</h3>
+            <div class="cmd-item"><code>/craft</code><span>どこでも作業台を開く</span></div>
+            <div class="cmd-item"><code>/enderchest</code><span>どこでもエンダーチェストを開く</span></div>
+            <div class="cmd-item"><code>/ec</code><span>エンダーチェスト（短縮）</span></div>
+        </div>
+        <div class="cmd-group">
+            <h3>🎰 ガチャ系</h3>
+            <div class="cmd-item"><code>/crates open [名前]</code><span>ガチャを開く</span></div>
+            <div class="cmd-item"><code>/crates preview [名前]</code><span>ガチャの中身をプレビュー</span></div>
+        </div>
+    </div>
+</section>
+
+<section id="rules">
+    <h2 class="section-title">RULES</h2>
+    <p class="section-sub">みんなが楽しめるサーバーのために</p>
+    <div class="rules-grid">
+        <div class="rule-card banned">
+            <h3>🚫 禁止事項</h3>
+            <div class="rule-item">チートクライアントの使用は厳禁</div>
+            <div class="rule-item">荒らし行為（暴言を含む）は禁止</div>
+            <div class="rule-item">WorldEditCUIの使用は禁止</div>
+            <div class="rule-item">N高グループのルールも適用</div>
+        </div>
+        <div class="rule-card ask">
+            <h3>⚠️ 要相談（Discordチケット）</h3>
+            <div class="rule-item">Xrayの使用（用途により判断）</div>
+            <div class="rule-item">判断に迷うMODはスタッフに相談</div>
+        </div>
+        <div class="rule-card allowed">
+            <h3>✅ 許可されているMOD</h3>
+            <div class="rule-item">シュルカープレビューMOD</div>
+            <div class="rule-item">暗視MOD</div>
+            <div class="rule-item">Tier表示MOD</div>
+            <div class="rule-item">Jade（ブロック/エンティティ情報表示）</div>
+            <div class="rule-item">JourneyMap（マップMOD）</div>
+            <div class="rule-item">その他一般的なクライアントMOD</div>
+        </div>
+    </div>
+</section>
+
+<section id="join">
+    <h2 class="section-title">HOW TO JOIN</h2>
+    <p class="section-sub">3ステップで今すぐ参加</p>
+    <div class="join-steps">
+        <div class="join-card">
+            <h3>Java版</h3>
+            <span class="badge badge-rec">推奨</span>
+            <ol>
+                <li>Minecraft Java版 1.21.1 を起動</li>
+                <li>マルチプレイ → サーバー追加</li>
+                <li>アドレスを入力して接続</li>
+            </ol>
+            <div class="ip-display">110.67.56.168:25565</div>
+        </div>
+        <div class="join-card">
+            <h3>統合版</h3>
+            <span class="badge badge-warn">非推奨・問題多数</span>
+            <ol>
+                <li>Minecraft統合版を起動</li>
+                <li>サーバー追加</li>
+                <li>アドレスとポートを入力して接続</li>
+            </ol>
+            <div class="ip-display">110.67.56.168:19132</div>
+        </div>
+    </div>
+</section>
+
+<section id="faq">
+    <h2 class="section-title">FAQ</h2>
+    <p class="section-sub">よくある質問</p>
+    <div class="faq-item">
+        <div class="faq-q" onclick="this.parentElement.classList.toggle('open')">お金はどうやって確認する？</div>
+        <div class="faq-a"><p>/money コマンドで所持金を確認できます。MobCoinは /mc で確認。</p></div>
+    </div>
+    <div class="faq-item">
+        <div class="faq-q" onclick="this.parentElement.classList.toggle('open')">ガチャはどこで引ける？</div>
+        <div class="faq-a"><p>マジックガチャとエンチャントガチャはShopスポーン地点の左にあるシュルカーボックス5個の場所で直接開封。ダイヤモンドガチャはウーパールーパーのショップ（ネザライトブロック周辺）。スポナーガチャはキーを購入して開封。コマンドは /crates open [クレート名]。</p></div>
+    </div>
+    <div class="faq-item">
+        <div class="faq-q" onclick="this.parentElement.classList.toggle('open')">SmartSpawnerって何？</div>
+        <div class="faq-a"><p>実際にモブをスポーンさせず、ドロップアイテムとXPを仮想的に自動生成するスポナー。放置するだけで素材が溜まる自動ファームを構築できます。右クリックでGUIを開いてアイテム回収。スポナー同士のスタックも可能。入手はスポナーガチャまたはMobCoin Shop。</p></div>
+    </div>
+    <div class="faq-item">
+        <div class="faq-q" onclick="this.parentElement.classList.toggle('open')">リカバリートーテムって何？</div>
+        <div class="faq-a"><p>インベントリに入れた状態で死亡すると、トーテム自体は消費されますが、それ以外の全アイテムが保持される独自アイテム。Shopで2,000円、またはマジックガチャから入手可能。</p></div>
+    </div>
+    <div class="faq-item">
+        <div class="faq-q" onclick="this.parentElement.classList.toggle('open')">統合版で遊べる？</div>
+        <div class="faq-a"><p>統合版からも接続可能ですが、現在大量の問題があるためJava版での接続を強く推奨しています。統合版プレイヤーの名前にはドット（.）がつきます（例: .CaptainBean19）。</p></div>
+    </div>
+    <div class="faq-item">
+        <div class="faq-q" onclick="this.parentElement.classList.toggle('open')">ワールド間の移動方法は？</div>
+        <div class="faq-a"><p>/rmenu コマンドで統合メニューを開き、OneBlock、PVP、サバイバルなど各ワールドへ移動できます。</p></div>
+    </div>
+    <div class="faq-item">
+        <div class="faq-q" onclick="this.parentElement.classList.toggle('open')">困ったことがある場合は？</div>
+        <div class="faq-a"><p>Discordサーバー（https://discord.gg/2v7JbraYBY）でチケットを作成してスタッフに相談してください。</p></div>
+    </div>
+    <div class="faq-item">
+        <div class="faq-q" onclick="this.parentElement.classList.toggle('open')">このサーバーはどういう人向け？</div>
+        <div class="faq-a"><p>PvPが好きな人、サバイバルでのんびり遊びたい人、ガチャやオークションなどの経済要素を楽しみたい人、OneBlockで新しい遊び方をしたい人。N高グループの生徒を中心としたコミュニティです。</p></div>
+    </div>
+</section>
+
+<footer>
+    <p>RetBareServer &copy; 2026 ｜ <a href="https://discord.gg/2v7JbraYBY" target="_blank">Discord</a> ｜ PVPもサバイバルも、全部ここで。</p>
+</footer>
+
+<!-- ===== エンチャントタブ切替 ===== -->
+<script>
+    function showTab(name) {
+        document.querySelectorAll('.enchant-panel').forEach(p => p.classList.remove('active'));
+        document.querySelectorAll('.enchant-tab').forEach(t => t.classList.remove('active'));
+        document.getElementById('tab-' + name).classList.add('active');
+        event.target.classList.add('active');
+    }
+</script>
+
+<!-- ===== Miibo AI チャットボット ===== -->
+<script>
+    function addStylesheet(href) {
+        let link = document.createElement('link');
+        link.href = href;
+        link.rel = 'stylesheet';
+        document.head.appendChild(link);
+    }
+
+    function createToggleButton() {
+        const toggleBtn = document.createElement('div');
+        toggleBtn.id = 'chatbot-toggle_button';
+        const anchor = document.createElement('a');
+        anchor.id = 'chat-button';
+        anchor.href = '#';
+        anchor.addEventListener('click', event => {
+            event.preventDefault();
+            toggleChatbox();
+        });
+        const img = document.createElement('img');
+        img.src = 'https://firebasestorage.googleapis.com/v0/b/mabo-f1cc7.appspot.com/o/chaticon.png?alt=media&token=1777070f-a83c-403d-8c83-f387f68ecd52';
+        img.width = '100';
+        img.height = '100';
+        anchor.appendChild(img);
+        toggleBtn.appendChild(anchor);
+        document.body.appendChild(toggleBtn);
+    }
+
+    function createChatboxHeader() {
+        const header = document.createElement('div');
+        header.id = 'chatbot-header';
+        header.style.background = '#4169e1';
+        const logo = document.createElement('div');
+        logo.id = 'chatbot-logo';
+        logo.innerText = 'RetbareAI v1.0対応';
+        const closeIcon = document.createElement('i');
+        closeIcon.id = 'chatbot-close-icon';
+        closeIcon.className = 'material-icons material-symbols-outlined waves-light';
+        closeIcon.innerText = 'close';
+        closeIcon.addEventListener('click', event => {
+            event.preventDefault();
+            toggleChatbox();
+        });
+        header.appendChild(logo);
+        header.appendChild(closeIcon);
+        return header;
+    }
+
+    function createChatbox() {
+        const chatbox = document.createElement('div');
+        chatbox.id = 'chatbot';
+        chatbox.style.display = 'none';
+        const header = createChatboxHeader();
+        const body = document.createElement('div');
+        body.id = 'chatbot-body';
+        const iframe = document.createElement('iframe');
+        iframe.id = 'inline-frame';
+        iframe.width = '100%';
+        iframe.height = '100%';
+        iframe.dataSrc = 'https://miibo.jp/chat/73737f9a-f0af-4626-bfaf-e300a51f218319d83c5bd081f?name=RetbareAI%20v1.0%E5%AF%BE%E5%BF%9C';
+        iframe.scrolling = 'no';
+        iframe.frameBorder = 'no';
+        body.appendChild(iframe);
+        chatbox.appendChild(header);
+        chatbox.appendChild(body);
+        document.body.appendChild(chatbox);
+    }
+
+    function toggleChatbox(utterance, ...states) {
+        var chatbox = document.getElementById('chatbot');
+        var iframe = document.getElementById('inline-frame');
+        if (typeof utterance !== 'string') {
+            utterance = null;
+        }
+        if (chatbox.style.display === 'none' || utterance) {
+            chatbox.style.display = 'block';
+            var src = 'https://miibo.jp/chat/73737f9a-f0af-4626-bfaf-e300a51f218319d83c5bd081f?name=RetbareAI%20v1.0%E5%AF%BE%E5%BF%9C';
+            states.forEach(state => {
+                if (state.key && state.value) {
+                    src += src.includes('?') ? '&' : '?';
+                    src += `${encodeURIComponent(state.key)}=${encodeURIComponent(state.value)}`;
+                }
+            });
+            if (!iframeLoaded || (utterance && lastUtterance !== utterance)) {
+                if (utterance) {
+                    src += src.includes('?') ? '&' : '?';
+                    src += "utterance=" + encodeURIComponent(utterance);
+                }
+                iframe.src = src;
+                iframeLoaded = true;
+                lastUtterance = utterance;
+            }
+        } else {
+            chatbox.style.display = 'none';
+        }
+    }
+
+    function setupEventListeners() {
+        document.querySelectorAll('.chatButton').forEach(button => {
+            button.addEventListener('click', event => {
+                event.preventDefault();
+                const utterance = button.getAttribute('data-utterance');
+                const statesData = button.getAttribute('data-states');
+                let states = [];
+                try {
+                    const statesObj = JSON.parse(statesData);
+                    states = Object.keys(statesObj).map(key => ({ key, value: statesObj[key] }));
+                } catch (e) {
+                    console.error("Error parsing states data", e);
+                }
+                toggleChatbox(utterance, ...states);
+            });
+        });
+    }
+
+    addStylesheet('https://fonts.googleapis.com/icon?family=Material+Icons');
+    addStylesheet('https://miibo.jp/chat3.css');
+    createToggleButton();
+    createChatbox();
+    setupEventListeners();
+
+    var iframeLoaded = false;
+    var lastUtterance = "";
+</script>
+
+</body>
+</html>
