@@ -5,628 +5,228 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>RetBareServer - PVPもサバイバルも、全部ここで。</title>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700;900&family=Orbitron:wght@700;900&display=swap');
-
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        :root {
-            --primary: #7c3aed;
-            --primary-dark: #5b21b6;
-            --accent: #f59e0b;
-            --accent-glow: #fbbf24;
-            --bg-dark: #0a0a0f;
-            --bg-card: #13131a;
-            --bg-card-hover: #1a1a25;
-            --text: #e4e4e7;
-            --text-muted: #a1a1aa;
-            --border: #27272a;
-            --success: #10b981;
-            --danger: #ef4444;
-            --info: #3b82f6;
-        }
-
-        body {
-            font-family: 'Noto Sans JP', sans-serif;
-            background: var(--bg-dark);
-            color: var(--text);
-            overflow-x: hidden;
-        }
-
-        .hero {
-            position: relative;
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            text-align: center;
-            padding: 2rem;
-            background: radial-gradient(ellipse at 50% 0%, rgba(124,58,237,0.15) 0%, transparent 60%),
-                        radial-gradient(ellipse at 80% 80%, rgba(245,158,11,0.08) 0%, transparent 50%),
-                        var(--bg-dark);
-        }
-
-        .hero::before {
-            content: '';
-            position: absolute;
-            top: 0; left: 0; right: 0; bottom: 0;
-            background-image:
-                radial-gradient(1px 1px at 20% 30%, rgba(255,255,255,0.3), transparent),
-                radial-gradient(1px 1px at 40% 70%, rgba(255,255,255,0.2), transparent),
-                radial-gradient(1px 1px at 60% 20%, rgba(255,255,255,0.3), transparent),
-                radial-gradient(1px 1px at 80% 50%, rgba(255,255,255,0.15), transparent),
-                radial-gradient(1px 1px at 10% 80%, rgba(255,255,255,0.2), transparent),
-                radial-gradient(1px 1px at 90% 10%, rgba(255,255,255,0.25), transparent);
-            pointer-events: none;
-        }
-
-        .hero-logo {
-            font-family: 'Orbitron', sans-serif;
-            font-size: clamp(2.5rem, 7vw, 5rem);
-            font-weight: 900;
-            background: linear-gradient(135deg, var(--primary), var(--accent));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-            margin-bottom: 0.5rem;
-            letter-spacing: 0.05em;
-        }
-
-        .hero-tagline {
-            font-size: clamp(1rem, 2.5vw, 1.5rem);
-            color: var(--text-muted);
-            margin-bottom: 2rem;
-            font-weight: 400;
-        }
-
-        .hero-buttons {
-            display: flex;
-            gap: 1rem;
-            flex-wrap: wrap;
-            justify-content: center;
-            margin-bottom: 3rem;
-        }
-
-        .btn {
-            display: inline-flex;
-            align-items: center;
-            gap: 0.5rem;
-            padding: 0.875rem 2rem;
-            border-radius: 12px;
-            font-size: 1rem;
-            font-weight: 700;
-            text-decoration: none;
-            transition: all 0.3s ease;
-            border: none;
-            cursor: pointer;
-        }
-
-        .btn-primary {
-            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
-            color: #fff;
-            box-shadow: 0 4px 20px rgba(124,58,237,0.4);
-        }
-
-        .btn-primary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 30px rgba(124,58,237,0.6);
-        }
-
-        .btn-accent {
-            background: linear-gradient(135deg, var(--accent), #d97706);
-            color: #000;
-            box-shadow: 0 4px 20px rgba(245,158,11,0.4);
-        }
-
-        .btn-accent:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 30px rgba(245,158,11,0.6);
-        }
-
-        .server-ip {
-            display: inline-flex;
-            align-items: center;
-            gap: 0.75rem;
-            background: var(--bg-card);
-            border: 1px solid var(--border);
-            padding: 1rem 1.5rem;
-            border-radius: 12px;
-            font-family: 'Orbitron', monospace;
-            font-size: 1.1rem;
-            color: var(--accent);
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-
-        .server-ip:hover {
-            border-color: var(--accent);
-            box-shadow: 0 0 20px rgba(245,158,11,0.2);
-        }
-
-        .server-ip .label {
-            font-family: 'Noto Sans JP', sans-serif;
-            font-size: 0.75rem;
-            color: var(--text-muted);
-            font-weight: 400;
-        }
-
-        .ip-group {
-            display: flex;
-            flex-direction: column;
-            gap: 0.5rem;
-            margin-top: 1rem;
-        }
-
-        nav {
-            position: fixed;
-            top: 0; left: 0; right: 0;
-            z-index: 1000;
-            background: rgba(10,10,15,0.85);
-            backdrop-filter: blur(20px);
-            border-bottom: 1px solid var(--border);
-            padding: 0.75rem 2rem;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-        }
-
-        nav .nav-logo {
-            font-family: 'Orbitron', sans-serif;
-            font-weight: 900;
-            font-size: 1.25rem;
-            background: linear-gradient(135deg, var(--primary), var(--accent));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
-
-        nav .nav-links {
-            display: flex;
-            gap: 1.5rem;
-            list-style: none;
-        }
-
-        nav .nav-links a {
-            color: var(--text-muted);
-            text-decoration: none;
-            font-size: 0.9rem;
-            font-weight: 700;
-            transition: color 0.3s;
-        }
-
-        nav .nav-links a:hover { color: var(--accent); }
-
-        section {
-            padding: 5rem 2rem;
-            max-width: 1200px;
-            margin: 0 auto;
-        }
-
-        .section-title {
-            font-family: 'Orbitron', sans-serif;
-            font-size: clamp(1.5rem, 4vw, 2.5rem);
-            font-weight: 900;
-            text-align: center;
-            margin-bottom: 0.5rem;
-            background: linear-gradient(135deg, #fff, var(--text-muted));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
-
-        .section-sub {
-            text-align: center;
-            color: var(--text-muted);
-            margin-bottom: 3rem;
-            font-size: 1rem;
-        }
-
-        .game-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-            gap: 1.5rem;
-        }
-
-        .game-card {
-            background: var(--bg-card);
-            border: 1px solid var(--border);
-            border-radius: 16px;
-            padding: 2rem;
-            transition: all 0.3s ease;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .game-card::before {
-            content: '';
-            position: absolute;
-            top: 0; left: 0; right: 0;
-            height: 3px;
-            background: linear-gradient(90deg, var(--primary), var(--accent));
-            opacity: 0;
-            transition: opacity 0.3s;
-        }
-
-        .game-card:hover {
-            transform: translateY(-4px);
-            border-color: var(--primary);
-            box-shadow: 0 8px 40px rgba(124,58,237,0.15);
-        }
-
-        .game-card:hover::before { opacity: 1; }
-        .game-card .card-icon { font-size: 2.5rem; margin-bottom: 1rem; }
-        .game-card h3 { font-size: 1.3rem; font-weight: 900; margin-bottom: 0.25rem; }
-
-        .game-card .card-tag {
-            display: inline-block;
-            font-size: 0.7rem;
-            font-weight: 700;
-            padding: 0.2rem 0.6rem;
-            border-radius: 6px;
-            margin-bottom: 0.75rem;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-        }
-
-        .tag-pvp { background: rgba(239,68,68,0.15); color: #ef4444; }
-        .tag-survival { background: rgba(16,185,129,0.15); color: #10b981; }
-        .tag-minigame { background: rgba(59,130,246,0.15); color: #3b82f6; }
-        .tag-creative { background: rgba(245,158,11,0.15); color: #f59e0b; }
-
-        .game-card p { color: var(--text-muted); font-size: 0.95rem; line-height: 1.7; }
-
-        .game-card .reward {
-            margin-top: 1rem;
-            padding: 0.75rem;
-            background: rgba(245,158,11,0.08);
-            border-radius: 8px;
-            font-size: 0.85rem;
-            color: var(--accent);
-        }
-
-        .economy-flow {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 1.5rem;
-            margin-bottom: 3rem;
-        }
-
-        .flow-step {
-            background: var(--bg-card);
-            border: 1px solid var(--border);
-            border-radius: 16px;
-            padding: 1.5rem;
-            text-align: center;
-        }
-
-        .flow-step .step-num {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            width: 40px; height: 40px;
-            border-radius: 50%;
-            background: linear-gradient(135deg, var(--primary), var(--accent));
-            color: #fff;
-            font-weight: 900;
-            font-size: 1.1rem;
-            margin-bottom: 0.75rem;
-        }
-
-        .flow-step h4 { font-size: 1rem; margin-bottom: 0.5rem; }
-        .flow-step p { color: var(--text-muted); font-size: 0.85rem; line-height: 1.6; }
-
-        .feature-highlight {
-            background: linear-gradient(135deg, rgba(124,58,237,0.08), rgba(245,158,11,0.05));
-            border: 1px solid var(--border);
-            border-radius: 16px;
-            padding: 2rem;
-            margin: 2rem 0;
-        }
-
-        .feature-highlight h3 { font-size: 1.2rem; font-weight: 900; margin-bottom: 0.75rem; }
-        .feature-highlight p { color: var(--text-muted); font-size: 0.95rem; line-height: 1.7; }
-
-        .items-showcase {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 1.25rem;
-            margin-top: 1.5rem;
-        }
-
-        .item-card {
-            background: var(--bg-card);
-            border: 1px solid var(--border);
-            border-radius: 12px;
-            padding: 1.25rem;
-        }
-
-        .item-card h4 { font-size: 1rem; margin-bottom: 0.5rem; }
-        .item-card p { color: var(--text-muted); font-size: 0.85rem; line-height: 1.6; }
-        .item-card .item-price { margin-top: 0.5rem; color: var(--accent); font-weight: 700; font-size: 0.9rem; }
-
-        .shop-category { margin-bottom: 2rem; }
-
-        .shop-category h3 {
-            font-size: 1.1rem;
-            font-weight: 900;
-            margin-bottom: 1rem;
-            padding-bottom: 0.5rem;
-            border-bottom: 1px solid var(--border);
-        }
-
-        table { width: 100%; border-collapse: collapse; margin-bottom: 1rem; }
-
-        table th, table td {
-            padding: 0.75rem 1rem;
-            text-align: left;
-            border-bottom: 1px solid var(--border);
-            font-size: 0.9rem;
-        }
-
-        table th {
-            color: var(--text-muted);
-            font-weight: 700;
-            font-size: 0.8rem;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-        }
-
-        table tr:hover td { background: rgba(124,58,237,0.05); }
-        .price { color: var(--accent); font-weight: 700; }
-
-        .gacha-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 1.5rem;
-        }
-
-        .gacha-card {
-            background: var(--bg-card);
-            border: 1px solid var(--border);
-            border-radius: 16px;
-            padding: 1.75rem;
-            transition: all 0.3s ease;
-        }
-
-        .gacha-card:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 8px 30px rgba(0,0,0,0.3);
-        }
-
-        .gacha-card h3 { font-size: 1.15rem; margin-bottom: 0.25rem; }
-        .gacha-card .gacha-price { font-size: 1.5rem; font-weight: 900; color: var(--accent); margin: 0.5rem 0; }
-        .gacha-card .gacha-desc { color: var(--text-muted); font-size: 0.9rem; line-height: 1.6; }
-
-        .enchant-tabs {
-            display: flex;
-            gap: 0.5rem;
-            flex-wrap: wrap;
-            margin-bottom: 1.5rem;
-            justify-content: center;
-        }
-
-        .enchant-tab {
-            padding: 0.5rem 1.25rem;
-            border-radius: 8px;
-            background: var(--bg-card);
-            border: 1px solid var(--border);
-            color: var(--text-muted);
-            font-size: 0.85rem;
-            font-weight: 700;
-            cursor: pointer;
-            transition: all 0.3s;
-        }
-
-        .enchant-tab.active, .enchant-tab:hover {
-            background: var(--primary);
-            color: #fff;
-            border-color: var(--primary);
-        }
-
-        .enchant-panel { display: none; }
-        .enchant-panel.active { display: block; }
-
-        .enchant-item {
-            background: var(--bg-card);
-            border: 1px solid var(--border);
-            border-radius: 12px;
-            padding: 1rem 1.25rem;
-            margin-bottom: 0.75rem;
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            gap: 1rem;
-        }
-
-        .enchant-item .enchant-name { font-weight: 700; font-size: 0.95rem; color: #fff; }
-        .enchant-item .enchant-jp { font-size: 0.8rem; color: var(--primary); }
-        .enchant-item .enchant-desc { font-size: 0.85rem; color: var(--text-muted); margin-top: 0.25rem; line-height: 1.5; }
-        .enchant-item .enchant-meta { text-align: right; white-space: nowrap; font-size: 0.8rem; color: var(--text-muted); }
-        .enchant-item .enchant-meta .lv { color: var(--accent); font-weight: 700; }
-
-        .cmd-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 1.5rem;
-        }
-
-        .cmd-group {
-            background: var(--bg-card);
-            border: 1px solid var(--border);
-            border-radius: 16px;
-            padding: 1.5rem;
-        }
-
-        .cmd-group h3 {
-            font-size: 1rem;
-            font-weight: 900;
-            margin-bottom: 1rem;
-            padding-bottom: 0.5rem;
-            border-bottom: 1px solid var(--border);
-        }
-
-        .cmd-item { display: flex; gap: 0.75rem; margin-bottom: 0.75rem; align-items: flex-start; }
-
-        .cmd-item code {
-            background: rgba(124,58,237,0.15);
-            color: var(--primary);
-            padding: 0.2rem 0.6rem;
-            border-radius: 6px;
-            font-size: 0.8rem;
-            font-weight: 700;
-            white-space: nowrap;
-            font-family: monospace;
-        }
-
-        .cmd-item span { color: var(--text-muted); font-size: 0.85rem; }
-
-        .rules-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 1.5rem;
-        }
-
-        .rule-card {
-            background: var(--bg-card);
-            border: 1px solid var(--border);
-            border-radius: 16px;
-            padding: 1.5rem;
-        }
-
-        .rule-card h3 { font-size: 1rem; font-weight: 900; margin-bottom: 1rem; }
-        .rule-card.banned h3 { color: var(--danger); }
-        .rule-card.ask h3 { color: var(--accent); }
-        .rule-card.allowed h3 { color: var(--success); }
-
-        .rule-item {
-            color: var(--text-muted);
-            font-size: 0.9rem;
-            padding: 0.4rem 0;
-            border-bottom: 1px solid rgba(39,39,42,0.5);
-            line-height: 1.5;
-        }
-
-        .rule-item:last-child { border-bottom: none; }
-
-        .join-steps {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 2rem;
-        }
-
-        .join-card {
-            background: var(--bg-card);
-            border: 1px solid var(--border);
-            border-radius: 16px;
-            padding: 2rem;
-            text-align: center;
-        }
-
-        .join-card h3 { font-size: 1.2rem; margin-bottom: 0.25rem; }
-
-        .join-card .badge {
-            display: inline-block;
-            font-size: 0.7rem;
-            font-weight: 700;
-            padding: 0.2rem 0.6rem;
-            border-radius: 6px;
-            margin-bottom: 1rem;
-        }
-
-        .badge-rec { background: rgba(16,185,129,0.15); color: #10b981; }
-        .badge-warn { background: rgba(239,68,68,0.15); color: #ef4444; }
-
-        .join-card ol {
-            text-align: left;
-            color: var(--text-muted);
-            font-size: 0.9rem;
-            line-height: 1.8;
-            padding-left: 1.25rem;
-        }
-
-        .join-card .ip-display {
-            margin-top: 1rem;
-            padding: 0.75rem;
-            background: rgba(245,158,11,0.08);
-            border-radius: 8px;
-            font-family: monospace;
-            font-size: 1rem;
-            color: var(--accent);
-            font-weight: 700;
-        }
-
-        .faq-item {
-            background: var(--bg-card);
-            border: 1px solid var(--border);
-            border-radius: 12px;
-            margin-bottom: 0.75rem;
-            overflow: hidden;
-        }
-
-        .faq-q {
-            padding: 1.25rem 1.5rem;
-            font-weight: 700;
-            font-size: 0.95rem;
-            cursor: pointer;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            transition: background 0.3s;
-        }
-
-        .faq-q:hover { background: var(--bg-card-hover); }
-
-        .faq-q::after {
-            content: '+';
-            font-size: 1.25rem;
-            color: var(--primary);
-            font-weight: 900;
-            transition: transform 0.3s;
-        }
-
-        .faq-item.open .faq-q::after { transform: rotate(45deg); }
-
-        .faq-a {
-            max-height: 0;
-            overflow: hidden;
-            transition: max-height 0.4s ease, padding 0.3s ease;
-        }
-
-        .faq-item.open .faq-a {
-            max-height: 500px;
-            padding: 0 1.5rem 1.25rem;
-        }
-
-        .faq-a p { color: var(--text-muted); font-size: 0.9rem; line-height: 1.7; }
-
-        footer {
-            text-align: center;
-            padding: 3rem 2rem;
-            border-top: 1px solid var(--border);
-            color: var(--text-muted);
-            font-size: 0.85rem;
-        }
-
-        footer a { color: var(--primary); text-decoration: none; }
-
-        @media (max-width: 768px) {
-            nav .nav-links { display: none; }
-            .hero { padding: 6rem 1.5rem 3rem; }
-            section { padding: 3rem 1rem; }
-            .enchant-item { flex-direction: column; }
-            .enchant-item .enchant-meta { text-align: left; }
-        }
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700;900&family=Orbitron:wght@700;900&family=Press+Start+2P&display=swap');
+        *{margin:0;padding:0;box-sizing:border-box}
+        :root{--primary:#7c3aed;--primary-dark:#5b21b6;--accent:#f59e0b;--bg-dark:#0a0a0f;--bg-card:#13131a;--bg-card-hover:#1a1a25;--text:#e4e4e7;--text-muted:#a1a1aa;--border:#27272a;--success:#10b981;--danger:#ef4444;--info:#3b82f6}
+        body{font-family:'Noto Sans JP',sans-serif;background:var(--bg-dark);color:var(--text);overflow-x:hidden}
+
+        /* NAV */
+        nav{position:fixed;top:0;left:0;right:0;z-index:1000;background:rgba(10,10,15,0.85);backdrop-filter:blur(20px);border-bottom:1px solid var(--border);padding:0.75rem 2rem;display:flex;align-items:center;justify-content:space-between}
+        nav .nav-logo{font-family:'Orbitron',sans-serif;font-weight:900;font-size:1.25rem;background:linear-gradient(135deg,var(--primary),var(--accent));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+        nav .nav-links{display:flex;gap:1.5rem;list-style:none;align-items:center}
+        nav .nav-links a{color:var(--text-muted);text-decoration:none;font-size:0.9rem;font-weight:700;transition:color 0.3s}
+        nav .nav-links a:hover{color:var(--accent)}
+        .nav-pvp-btn{background:linear-gradient(135deg,#ef4444,#dc2626);color:#fff!important;padding:0.4rem 1rem;border-radius:8px;font-weight:900;font-size:0.85rem;cursor:pointer;border:none;transition:all 0.3s;text-decoration:none}
+        .nav-pvp-btn:hover{transform:scale(1.05);box-shadow:0 0 20px rgba(239,68,68,0.5)}
+
+        /* HERO */
+        .hero{position:relative;min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:2rem;background:radial-gradient(ellipse at 50% 0%,rgba(124,58,237,0.15) 0%,transparent 60%),radial-gradient(ellipse at 80% 80%,rgba(245,158,11,0.08) 0%,transparent 50%),var(--bg-dark)}
+        .hero::before{content:'';position:absolute;top:0;left:0;right:0;bottom:0;background-image:radial-gradient(1px 1px at 20% 30%,rgba(255,255,255,0.3),transparent),radial-gradient(1px 1px at 40% 70%,rgba(255,255,255,0.2),transparent),radial-gradient(1px 1px at 60% 20%,rgba(255,255,255,0.3),transparent),radial-gradient(1px 1px at 80% 50%,rgba(255,255,255,0.15),transparent),radial-gradient(1px 1px at 10% 80%,rgba(255,255,255,0.2),transparent),radial-gradient(1px 1px at 90% 10%,rgba(255,255,255,0.25),transparent);pointer-events:none}
+        .hero-logo{font-family:'Orbitron',sans-serif;font-size:clamp(2.5rem,7vw,5rem);font-weight:900;background:linear-gradient(135deg,var(--primary),var(--accent));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:0.5rem;letter-spacing:0.05em}
+        .hero-tagline{font-size:clamp(1rem,2.5vw,1.5rem);color:var(--text-muted);margin-bottom:2rem;font-weight:400}
+        .hero-buttons{display:flex;gap:1rem;flex-wrap:wrap;justify-content:center;margin-bottom:3rem}
+        .btn{display:inline-flex;align-items:center;gap:0.5rem;padding:0.875rem 2rem;border-radius:12px;font-size:1rem;font-weight:700;text-decoration:none;transition:all 0.3s ease;border:none;cursor:pointer}
+        .btn-primary{background:linear-gradient(135deg,var(--primary),var(--primary-dark));color:#fff;box-shadow:0 4px 20px rgba(124,58,237,0.4)}
+        .btn-primary:hover{transform:translateY(-2px);box-shadow:0 8px 30px rgba(124,58,237,0.6)}
+        .btn-accent{background:linear-gradient(135deg,var(--accent),#d97706);color:#000;box-shadow:0 4px 20px rgba(245,158,11,0.4)}
+        .btn-accent:hover{transform:translateY(-2px);box-shadow:0 8px 30px rgba(245,158,11,0.6)}
+        .server-ip{display:inline-flex;align-items:center;gap:0.75rem;background:var(--bg-card);border:1px solid var(--border);padding:1rem 1.5rem;border-radius:12px;font-family:'Orbitron',monospace;font-size:1.1rem;color:var(--accent);cursor:pointer;transition:all 0.3s ease}
+        .server-ip:hover{border-color:var(--accent);box-shadow:0 0 20px rgba(245,158,11,0.2)}
+        .server-ip .label{font-family:'Noto Sans JP',sans-serif;font-size:0.75rem;color:var(--text-muted);font-weight:400}
+        .ip-group{display:flex;flex-direction:column;gap:0.5rem;margin-top:1rem}
+
+        /* SECTIONS */
+        section{padding:5rem 2rem;max-width:1200px;margin:0 auto}
+        .section-title{font-family:'Orbitron',sans-serif;font-size:clamp(1.5rem,4vw,2.5rem);font-weight:900;text-align:center;margin-bottom:0.5rem;background:linear-gradient(135deg,#fff,var(--text-muted));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+        .section-sub{text-align:center;color:var(--text-muted);margin-bottom:3rem;font-size:1rem}
+
+        /* MC GUI */
+        .mc-overlay{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.75);z-index:2000;justify-content:center;align-items:center}
+        .mc-overlay.active{display:flex}
+        .mc-gui{background:#c6c6c6;border:4px solid;border-color:#fff #555 #555 #fff;padding:8px;max-width:600px;width:95%;position:relative;image-rendering:pixelated}
+        .mc-gui-title{background:#333;color:#fff;font-family:'Press Start 2P',monospace;font-size:12px;text-align:center;padding:8px;margin-bottom:8px;border:2px solid;border-color:#555 #fff #fff #555}
+        .mc-gui-close{position:absolute;top:4px;right:8px;background:#c6c6c6;border:2px solid;border-color:#fff #555 #555 #fff;color:#333;font-family:'Press Start 2P',monospace;font-size:10px;padding:4px 8px;cursor:pointer}
+        .mc-gui-close:hover{background:#aaa}
+        .mc-gui-close:active{border-color:#555 #fff #fff #555}
+        .mc-slot-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:4px;padding:4px}
+        .mc-slot{background:#8b8b8b;border:2px solid;border-color:#555 #fff #fff #555;padding:12px 8px;text-align:center;cursor:pointer;font-family:'Press Start 2P',monospace;font-size:10px;color:#fff;transition:background 0.1s;line-height:1.6}
+        .mc-slot:hover{background:#aaa}
+        .mc-slot:active{border-color:#fff #555 #555 #fff}
+        .mc-slot .slot-icon{font-size:24px;display:block;margin-bottom:4px}
+        .mc-slot .slot-name{font-size:9px;color:#fff;text-shadow:1px 1px #333}
+        .mc-content{background:#8b8b8b;border:2px solid;border-color:#555 #fff #fff #555;padding:12px;margin:4px;font-family:'Press Start 2P',monospace;font-size:9px;color:#fff;line-height:2;max-height:450px;overflow-y:auto;text-shadow:1px 1px #333}
+        .mc-content h3{font-size:11px;color:#55ff55;margin:8px 0 4px;text-shadow:1px 1px #005500}
+        .mc-content .item-row{display:flex;justify-content:space-between;padding:2px 4px;border-bottom:1px solid #777}
+        .mc-content .item-row:hover{background:#999}
+        .mc-content .price-iron{color:#ddd}
+        .mc-content .price-gold{color:#ffaa00}
+        .mc-content .price-emerald{color:#55ff55}
+        .mc-content .price-diamond{color:#55ffff}
+        .mc-content .retbare-tag{color:#ff55ff;font-weight:bold}
+        .mc-content .beta-tag{color:#ff5555;font-size:8px}
+        .mc-btn{background:#444;border:2px solid;border-color:#777 #222 #222 #777;color:#fff;font-family:'Press Start 2P',monospace;font-size:9px;padding:6px 12px;cursor:pointer;margin:4px;display:inline-block;text-shadow:1px 1px #000}
+        .mc-btn:hover{background:#555}
+        .mc-btn:active{border-color:#222 #777 #777 #222}
+        .mc-back-btn{background:#663333;border:2px solid;border-color:#995555 #331111 #331111 #995555;color:#ff9999;font-family:'Press Start 2P',monospace;font-size:9px;padding:6px 12px;cursor:pointer;margin:4px 4px 4px 0;text-shadow:1px 1px #000}
+        .mc-back-btn:hover{background:#884444}
+
+        /* TERMINAL */
+        .terminal-overlay{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.9);z-index:3000;justify-content:center;align-items:center}
+        .terminal-overlay.active{display:flex}
+        .terminal-box{background:#0c0c0c;border:2px solid #333;border-radius:8px;width:90%;max-width:700px;height:450px;display:flex;flex-direction:column;font-family:'Courier New',monospace;overflow:hidden}
+        .terminal-box.op-mode{border-color:#ff00ff;box-shadow:0 0 30px rgba(255,0,255,0.3)}
+        .terminal-box.op-mode .terminal-header{background:linear-gradient(90deg,#ff00ff,#00ffff,#ff00ff);background-size:200% 200%;animation:rainbow 2s linear infinite}
+        @keyframes rainbow{0%{background-position:0% 50%}100%{background-position:200% 50%}}
+        .terminal-header{background:#1a1a1a;padding:8px 12px;font-size:12px;color:#888;display:flex;justify-content:space-between;align-items:center}
+        .terminal-header .close-term{cursor:pointer;color:#ff5555;font-weight:bold}
+        .terminal-body{flex:1;padding:12px;overflow-y:auto;font-size:13px;color:#0f0}
+        .terminal-body.op-mode-body{color:#ff00ff}
+        .terminal-line{margin-bottom:4px;white-space:pre-wrap;word-break:break-all}
+        .terminal-line.error{color:#ff5555}
+        .terminal-line.success{color:#55ff55}
+        .terminal-line.info{color:#55ffff}
+        .terminal-line.gold{color:#ffaa00}
+        .terminal-line.rainbow{background:linear-gradient(90deg,red,orange,yellow,green,blue,purple);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;font-weight:bold}
+        .terminal-input-row{display:flex;padding:8px 12px;background:#111;border-top:1px solid #333}
+        .terminal-input-row span{color:#0f0;margin-right:4px}
+        .terminal-input-row.op-input span{color:#ff00ff}
+        .terminal-input{flex:1;background:transparent;border:none;color:#0f0;font-family:'Courier New',monospace;font-size:13px;outline:none}
+        .terminal-input.op-input-field{color:#ff00ff}
+
+        /* GAMBLING */
+        .gamble-overlay{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.85);z-index:4000;justify-content:center;align-items:center}
+        .gamble-overlay.active{display:flex}
+        .gamble-box{background:linear-gradient(135deg,#1a0033,#330066,#1a0033);border:3px solid #ff00ff;border-radius:16px;width:90%;max-width:500px;padding:2rem;text-align:center;box-shadow:0 0 60px rgba(255,0,255,0.4);animation:gamblePulse 2s ease-in-out infinite;position:relative}
+        @keyframes gamblePulse{0%,100%{box-shadow:0 0 60px rgba(255,0,255,0.4)}50%{box-shadow:0 0 100px rgba(255,0,255,0.8)}}
+        .gamble-title{font-family:'Orbitron',sans-serif;font-size:1.5rem;font-weight:900;background:linear-gradient(90deg,#ff00ff,#00ffff,#ffff00,#ff00ff);background-size:300% 300%;-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;animation:gradientShift 3s ease infinite;margin-bottom:1rem}
+        @keyframes gradientShift{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}
+        .gamble-subtitle{color:#ccc;font-size:0.85rem;margin-bottom:1.5rem}
+        .gamble-display{background:#000;border:2px solid #ff00ff;border-radius:12px;padding:1.5rem;margin:1rem 0;min-height:80px;display:flex;justify-content:center;align-items:center;gap:1rem}
+        .gamble-reel{font-size:3rem;width:70px;height:70px;background:#111;border:2px solid #555;border-radius:8px;display:flex;align-items:center;justify-content:center;transition:all 0.1s}
+        .gamble-reel.spinning{animation:spinAnim 0.1s linear infinite}
+        @keyframes spinAnim{0%{transform:translateY(-5px)}50%{transform:translateY(5px)}100%{transform:translateY(-5px)}}
+        .gamble-coins{font-family:'Orbitron',sans-serif;font-size:1.2rem;color:#ffaa00;margin:0.5rem 0}
+        .gamble-btn{background:linear-gradient(135deg,#ff00ff,#9900cc);color:#fff;border:none;padding:12px 40px;border-radius:8px;font-size:1.1rem;font-weight:900;cursor:pointer;transition:all 0.3s;font-family:'Orbitron',sans-serif}
+        .gamble-btn:hover{transform:scale(1.05);box-shadow:0 0 30px rgba(255,0,255,0.6)}
+        .gamble-btn:disabled{opacity:0.5;cursor:not-allowed;transform:none}
+        .gamble-close{position:absolute;top:10px;right:15px;color:#ff5555;font-size:1.5rem;cursor:pointer;font-weight:bold}
+        .gamble-result{font-family:'Orbitron',sans-serif;font-size:1rem;margin-top:0.75rem;min-height:1.5rem}
+        .gamble-result.win{color:#55ff55;text-shadow:0 0 10px #55ff55}
+        .gamble-result.lose{color:#ff5555}
+        .gamble-result.jackpot{font-size:1.5rem;background:linear-gradient(90deg,#ff0,#f0f,#0ff,#ff0);background-size:300% 300%;-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;animation:gradientShift 1s ease infinite}
+        .gamble-history{margin-top:1rem;max-height:100px;overflow-y:auto;font-size:0.75rem;color:#888;text-align:left;padding:0.5rem;background:rgba(0,0,0,0.5);border-radius:8px}
+
+        /* GAME CARDS */
+        .game-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:1.5rem}
+        .game-card{background:var(--bg-card);border:1px solid var(--border);border-radius:16px;padding:2rem;transition:all 0.3s ease;position:relative;overflow:hidden}
+        .game-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--primary),var(--accent));opacity:0;transition:opacity 0.3s}
+        .game-card:hover{transform:translateY(-4px);border-color:var(--primary);box-shadow:0 8px 40px rgba(124,58,237,0.15)}
+        .game-card:hover::before{opacity:1}
+        .game-card .card-icon{font-size:2.5rem;margin-bottom:1rem}
+        .game-card h3{font-size:1.3rem;font-weight:900;margin-bottom:0.25rem}
+        .card-tag{display:inline-block;font-size:0.7rem;font-weight:700;padding:0.2rem 0.6rem;border-radius:6px;margin-bottom:0.75rem;text-transform:uppercase;letter-spacing:0.05em}
+        .tag-pvp{background:rgba(239,68,68,0.15);color:#ef4444}
+        .tag-survival{background:rgba(16,185,129,0.15);color:#10b981}
+        .tag-minigame{background:rgba(59,130,246,0.15);color:#3b82f6}
+        .tag-creative{background:rgba(245,158,11,0.15);color:#f59e0b}
+        .game-card p{color:var(--text-muted);font-size:0.95rem;line-height:1.7}
+        .game-card .reward{margin-top:1rem;padding:0.75rem;background:rgba(245,158,11,0.08);border-radius:8px;font-size:0.85rem;color:var(--accent)}
+
+        /* ECONOMY */
+        .economy-flow{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:1.5rem;margin-bottom:3rem}
+        .flow-step{background:var(--bg-card);border:1px solid var(--border);border-radius:16px;padding:1.5rem;text-align:center}
+        .flow-step .step-num{display:inline-flex;align-items:center;justify-content:center;width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,var(--primary),var(--accent));color:#fff;font-weight:900;font-size:1.1rem;margin-bottom:0.75rem}
+        .flow-step h4{font-size:1rem;margin-bottom:0.5rem}
+        .flow-step p{color:var(--text-muted);font-size:0.85rem;line-height:1.6}
+        .feature-highlight{background:linear-gradient(135deg,rgba(124,58,237,0.08),rgba(245,158,11,0.05));border:1px solid var(--border);border-radius:16px;padding:2rem;margin:2rem 0}
+        .feature-highlight h3{font-size:1.2rem;font-weight:900;margin-bottom:0.75rem}
+        .feature-highlight p{color:var(--text-muted);font-size:0.95rem;line-height:1.7}
+        .items-showcase{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:1.25rem;margin-top:1.5rem}
+        .item-card{background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:1.25rem}
+        .item-card h4{font-size:1rem;margin-bottom:0.5rem}
+        .item-card p{color:var(--text-muted);font-size:0.85rem;line-height:1.6}
+        .item-card .item-price{margin-top:0.5rem;color:var(--accent);font-weight:700;font-size:0.9rem}
+
+        /* SHOP */
+        .shop-category{margin-bottom:2rem}
+        .shop-category h3{font-size:1.1rem;font-weight:900;margin-bottom:1rem;padding-bottom:0.5rem;border-bottom:1px solid var(--border)}
+        table{width:100%;border-collapse:collapse;margin-bottom:1rem}
+        table th,table td{padding:0.75rem 1rem;text-align:left;border-bottom:1px solid var(--border);font-size:0.9rem}
+        table th{color:var(--text-muted);font-weight:700;font-size:0.8rem;text-transform:uppercase;letter-spacing:0.05em}
+        table tr:hover td{background:rgba(124,58,237,0.05)}
+        .price{color:var(--accent);font-weight:700}
+
+        /* GACHA */
+        .gacha-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:1.5rem}
+        .gacha-card{background:var(--bg-card);border:1px solid var(--border);border-radius:16px;padding:1.75rem;transition:all 0.3s ease}
+        .gacha-card:hover{transform:translateY(-3px);box-shadow:0 8px 30px rgba(0,0,0,0.3)}
+        .gacha-card h3{font-size:1.15rem;margin-bottom:0.25rem}
+        .gacha-card .gacha-price{font-size:1.5rem;font-weight:900;color:var(--accent);margin:0.5rem 0}
+        .gacha-card .gacha-desc{color:var(--text-muted);font-size:0.9rem;line-height:1.6}
+
+        /* ENCHANT */
+        .enchant-tabs{display:flex;gap:0.5rem;flex-wrap:wrap;margin-bottom:1.5rem;justify-content:center}
+        .enchant-tab{padding:0.5rem 1.25rem;border-radius:8px;background:var(--bg-card);border:1px solid var(--border);color:var(--text-muted);font-size:0.85rem;font-weight:700;cursor:pointer;transition:all 0.3s}
+        .enchant-tab.active,.enchant-tab:hover{background:var(--primary);color:#fff;border-color:var(--primary)}
+        .enchant-panel{display:none}
+        .enchant-panel.active{display:block}
+        .enchant-item{background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:1rem 1.25rem;margin-bottom:0.75rem;display:flex;justify-content:space-between;align-items:flex-start;gap:1rem}
+        .enchant-item .enchant-name{font-weight:700;font-size:0.95rem;color:#fff}
+        .enchant-item .enchant-jp{font-size:0.8rem;color:var(--primary)}
+        .enchant-item .enchant-desc{font-size:0.85rem;color:var(--text-muted);margin-top:0.25rem;line-height:1.5}
+        .enchant-item .enchant-meta{text-align:right;white-space:nowrap;font-size:0.8rem;color:var(--text-muted)}
+        .enchant-item .enchant-meta .lv{color:var(--accent);font-weight:700}
+
+        /* CMD */
+        .cmd-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:1.5rem}
+        .cmd-group{background:var(--bg-card);border:1px solid var(--border);border-radius:16px;padding:1.5rem}
+        .cmd-group h3{font-size:1rem;font-weight:900;margin-bottom:1rem;padding-bottom:0.5rem;border-bottom:1px solid var(--border)}
+        .cmd-item{display:flex;gap:0.75rem;margin-bottom:0.75rem;align-items:flex-start}
+        .cmd-item code{background:rgba(124,58,237,0.15);color:var(--primary);padding:0.2rem 0.6rem;border-radius:6px;font-size:0.8rem;font-weight:700;white-space:nowrap;font-family:monospace}
+        .cmd-item span{color:var(--text-muted);font-size:0.85rem}
+
+        /* RULES */
+        .rules-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:1.5rem}
+        .rule-card{background:var(--bg-card);border:1px solid var(--border);border-radius:16px;padding:1.5rem}
+        .rule-card h3{font-size:1rem;font-weight:900;margin-bottom:1rem}
+        .rule-card.banned h3{color:var(--danger)}
+        .rule-card.ask h3{color:var(--accent)}
+        .rule-card.allowed h3{color:var(--success)}
+        .rule-item{color:var(--text-muted);font-size:0.9rem;padding:0.4rem 0;border-bottom:1px solid rgba(39,39,42,0.5);line-height:1.5}
+        .rule-item:last-child{border-bottom:none}
+
+        /* JOIN */
+        .join-steps{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:2rem}
+        .join-card{background:var(--bg-card);border:1px solid var(--border);border-radius:16px;padding:2rem;text-align:center}
+        .join-card h3{font-size:1.2rem;margin-bottom:0.25rem}
+        .join-card .badge{display:inline-block;font-size:0.7rem;font-weight:700;padding:0.2rem 0.6rem;border-radius:6px;margin-bottom:1rem}
+        .badge-rec{background:rgba(16,185,129,0.15);color:#10b981}
+        .badge-warn{background:rgba(239,68,68,0.15);color:#ef4444}
+        .join-card ol{text-align:left;color:var(--text-muted);font-size:0.9rem;line-height:1.8;padding-left:1.25rem}
+        .join-card .ip-display{margin-top:1rem;padding:0.75rem;background:rgba(245,158,11,0.08);border-radius:8px;font-family:monospace;font-size:1rem;color:var(--accent);font-weight:700}
+
+        /* FAQ */
+        .faq-item{background:var(--bg-card);border:1px solid var(--border);border-radius:12px;margin-bottom:0.75rem;overflow:hidden}
+        .faq-q{padding:1.25rem 1.5rem;font-weight:700;font-size:0.95rem;cursor:pointer;display:flex;justify-content:space-between;align-items:center;transition:background 0.3s}
+        .faq-q:hover{background:var(--bg-card-hover)}
+        .faq-q::after{content:'+';font-size:1.25rem;color:var(--primary);font-weight:900;transition:transform 0.3s}
+        .faq-item.open .faq-q::after{transform:rotate(45deg)}
+        .faq-a{max-height:0;overflow:hidden;transition:max-height 0.4s ease,padding 0.3s ease}
+        .faq-item.open .faq-a{max-height:500px;padding:0 1.5rem 1.25rem}
+        .faq-a p{color:var(--text-muted);font-size:0.9rem;line-height:1.7}
+
+        footer{text-align:center;padding:3rem 2rem;border-top:1px solid var(--border);color:var(--text-muted);font-size:0.85rem}
+        footer a{color:var(--primary);text-decoration:none}
+        @media(max-width:768px){nav .nav-links{display:none}.hero{padding:6rem 1.5rem 3rem}section{padding:3rem 1rem}.enchant-item{flex-direction:column}.enchant-item .enchant-meta{text-align:left}}
     </style>
 </head>
 <body>
 
+<!-- NAV -->
 <nav>
     <div class="nav-logo">RetBareServer</div>
     <ul class="nav-links">
+        <li><a href="#" class="nav-pvp-btn" onclick="openPvpMenu()">PVP</a></li>
         <li><a href="#games">ゲームモード</a></li>
         <li><a href="#economy">経済</a></li>
         <li><a href="#shop">ショップ</a></li>
@@ -639,6 +239,247 @@
     </ul>
 </nav>
 
+<!-- MC GUI: PVP MENU -->
+<div class="mc-overlay" id="pvp-menu">
+    <div class="mc-gui">
+        <div class="mc-gui-title">PVP メニュー ─ 何を見ますか？</div>
+        <div class="mc-gui-close" onclick="closeAllGui()">X</div>
+        <div class="mc-slot-grid">
+            <div class="mc-slot" onclick="openBedwarsGui()"><span class="slot-icon">🛏️</span><span class="slot-name">BEDWARS</span></div>
+            <div class="mc-slot" onclick="openSkywarsGui()"><span class="slot-icon">⚔️</span><span class="slot-name">SKYWARS</span></div>
+            <div class="mc-slot" onclick="openDuelGui()"><span class="slot-icon">🎯</span><span class="slot-name">DUEL</span></div>
+        </div>
+    </div>
+</div>
+
+<!-- MC GUI: BEDWARS -->
+<div class="mc-overlay" id="bedwars-gui">
+    <div class="mc-gui">
+        <div class="mc-gui-title">🛏️ BEDWARS</div>
+        <div class="mc-gui-close" onclick="closeAllGui()">X</div>
+        <div class="mc-content" id="bw-main">
+            <h3>基本情報</h3>
+            BedWarsをプレイすることが<br>できます！<br><br>
+            ベッドを守りながら相手チームの<br>ベッドを破壊し、全員を倒そう！<br><br>
+            <span style="color:#ffaa00">勝利ボーナス: 1,028円</span><br>
+            <span style="color:#ffaa00">ベッド破壊: 1,000円</span><br><br>
+            <div class="mc-btn" onclick="showBwShop()">🛒 ショップの内容を見る</div>
+            <div class="mc-btn" onclick="showBwMaps()">🗺️ マップ一覧</div>
+            <div class="mc-btn" onclick="showBwCmd()">💬 コマンド</div>
+        </div>
+        <div class="mc-content" id="bw-shop" style="display:none">
+            <div class="mc-back-btn" onclick="showBwMain()">← 戻る</div>
+            <h3>═══ アイテムショップ ═══</h3><br>
+            <h3 style="color:#ddd">🧱 ブロック</h3>
+            <div class="item-row"><span>ウール x16</span><span class="price-iron">鉄 4</span></div>
+            <div class="item-row"><span>クレイ x16</span><span class="price-iron">鉄 12</span></div>
+            <div class="item-row"><span>ガラス x4</span><span class="price-iron">鉄 12</span></div>
+            <div class="item-row"><span>エンドストーン x12</span><span class="price-iron">鉄 24</span></div>
+            <div class="item-row"><span>はしご x16</span><span class="price-iron">鉄 4</span></div>
+            <div class="item-row"><span>木材 x16</span><span class="price-gold">金 4</span></div>
+            <div class="item-row"><span>黒曜石 x4</span><span class="price-emerald">エメ 4</span></div>
+            <br>
+            <h3 style="color:#ddd">🗡️ 武器</h3>
+            <div class="item-row"><span>木の剣</span><span class="price-iron">無料 (永久)</span></div>
+            <div class="item-row"><span>石の剣</span><span class="price-iron">鉄 10</span></div>
+            <div class="item-row"><span>鉄の剣</span><span class="price-gold">金 7</span></div>
+            <div class="item-row"><span>ダイヤの剣</span><span class="price-emerald">エメ 3</span></div>
+            <div class="item-row"><span>ノックバック棒</span><span class="price-gold">金 5</span></div>
+            <div class="item-row"><span class="retbare-tag">❄️ 氷属性の剣 [RetBare]</span><span class="price-emerald">エメ 1</span></div>
+            <div class="item-row"><span style="font-size:8px;color:#aaa">相手を氷状態にさせる特殊な剣</span></div>
+            <div class="item-row"><span class="retbare-tag">🎆 花火の剣 [RetBare]</span><span class="price-emerald">エメ 6</span></div>
+            <div class="item-row"><span style="font-size:8px;color:#aaa">低確率で相手を宙に打ち上げ花火にする <span class="beta-tag">[RetBare3 β]</span></span></div>
+            <br>
+            <h3 style="color:#ddd">⛏️ ツール</h3>
+            <div class="item-row"><span>木のツルハシ</span><span class="price-iron">鉄 10 (永久)</span></div>
+            <div class="item-row"><span>鉄のツルハシ</span><span class="price-iron">鉄 10 + 木ツル</span></div>
+            <div class="item-row"><span>金のツルハシ</span><span class="price-gold">金 3 + 鉄ツル</span></div>
+            <div class="item-row"><span>ダイヤのツルハシ</span><span class="price-gold">金 6 + 金ツル</span></div>
+            <div class="item-row"><span>木の斧</span><span class="price-iron">鉄 10 (永久)</span></div>
+            <div class="item-row"><span>石の斧</span><span class="price-iron">鉄 10 + 木斧</span></div>
+            <div class="item-row"><span>鉄の斧</span><span class="price-gold">金 3 + 石斧</span></div>
+            <div class="item-row"><span>ダイヤの斧</span><span class="price-gold">金 6 + 鉄斧</span></div>
+            <div class="item-row"><span>ハサミ</span><span class="price-iron">鉄 20 (永久)</span></div>
+            <div class="item-row"><span class="retbare-tag">🔨 ガラスブレーカー [RetBare]</span><span class="price-iron">鉄 20</span></div>
+            <div class="item-row"><span style="font-size:8px;color:#aaa">ガラスを即時破壊できるツルハシ <span class="beta-tag">[RetBare3 β]</span></span></div>
+            <br>
+            <h3 style="color:#ddd">🛡️ 防具</h3>
+            <div class="item-row"><span>チェーン装備</span><span class="price-iron">鉄 40 (永久)</span></div>
+            <div class="item-row"><span>鉄装備</span><span class="price-gold">金 12 (永久)</span></div>
+            <div class="item-row"><span>ダイヤ装備</span><span class="price-emerald">エメ 6 (永久)</span></div>
+            <br>
+            <h3 style="color:#ddd">🏹 弓・矢</h3>
+            <div class="item-row"><span>弓</span><span class="price-gold">金 12</span></div>
+            <div class="item-row"><span>弓 (パワーI)</span><span class="price-gold">金 24</span></div>
+            <div class="item-row"><span>パンチ弓</span><span class="price-emerald">エメ 6</span></div>
+            <div class="item-row"><span>矢 x8</span><span class="price-gold">金 2</span></div>
+            <br>
+            <h3 style="color:#ddd">🧪 ポーション</h3>
+            <div class="item-row"><span>跳躍力上昇ポーション</span><span class="price-emerald">エメ 1</span></div>
+            <div class="item-row"><span>移動速度上昇ポーション</span><span class="price-emerald">エメ 1</span></div>
+            <div class="item-row"><span>透明化ポーション</span><span class="price-emerald">エメ 2</span></div>
+            <br>
+            <h3 style="color:#ddd">🔧 ユーティリティ</h3>
+            <div class="item-row"><span>金のリンゴ</span><span class="price-gold">金 3</span></div>
+            <div class="item-row"><span>ファイアボール</span><span class="price-iron">鉄 40</span></div>
+            <div class="item-row"><span>TNT</span><span class="price-gold">金 8</span></div>
+            <div class="item-row"><span>水バケツ</span><span class="price-gold">金 6</span></div>
+            <div class="item-row"><span>エンダーパール</span><span class="price-emerald">エメ 4</span></div>
+            <div class="item-row"><span>ブリッジエッグ</span><span class="price-emerald">エメ 1</span></div>
+            <div class="item-row"><span>ポップアップタワー</span><span class="price-iron">鉄 24</span></div>
+            <div class="item-row"><span>マジックミルク</span><span class="price-gold">金 4</span></div>
+            <div class="item-row"><span>スポンジ x4</span><span class="price-gold">金 6</span></div>
+            <div class="item-row"><span>ベッドバグ</span><span class="price-iron">鉄 40</span></div>
+            <div class="item-row"><span>アイアンゴーレム</span><span class="price-iron">鉄 120</span></div>
+            <br>
+            <h3 style="color:#ff55ff">💎 RetBare 特殊アイテム</h3>
+            <div class="item-row"><span class="retbare-tag">🧭 追跡コンパス</span><span class="price-emerald">エメ 1</span></div>
+            <div class="item-row"><span style="font-size:8px;color:#aaa">最も近い敵の方角を示すコンパス</span></div>
+            <div class="item-row"><span class="retbare-tag">✨ ワープパウダー</span><span class="price-emerald">エメ 1</span></div>
+            <div class="item-row"><span style="font-size:8px;color:#aaa">使用後数秒間じっとしていると自チーム拠点にTP。動くとキャンセル</span></div>
+            <div class="item-row"><span class="retbare-tag">🛡️ アローブロッカー</span><span class="price-emerald">エメ 1</span></div>
+            <div class="item-row"><span style="font-size:8px;color:#aaa">一定時間矢を完全にブロックする</span></div>
+            <div class="item-row"><span class="retbare-tag">🐑 TNT羊</span><span class="price-emerald">エメ 1</span></div>
+            <div class="item-row"><span style="font-size:8px;color:#aaa">羊がTNTとして敵チームに突撃する</span></div>
+            <div class="item-row"><span class="retbare-tag">🧱 レスキュープラットフォーム</span><span class="price-emerald">エメ 1</span></div>
+            <div class="item-row"><span style="font-size:8px;color:#aaa">足場がない場所でも即座にプラットフォームを展開</span></div>
+            <div class="item-row"><span class="retbare-tag">🧲 マグネットシューズ</span><span class="price-emerald">エメ 1</span></div>
+            <div class="item-row"><span style="font-size:8px;color:#aaa">ノックバックを大幅に軽減するブーツ</span></div>
+            <div class="item-row"><span class="retbare-tag">📦 チームチェスト</span><span class="price-emerald">エメ 1</span></div>
+            <div class="item-row"><span style="font-size:8px;color:#aaa">チームメンバーだけがアクセスできる共有チェスト</span></div>
+            <br>
+            <h3 style="color:#55ffff">💠 チームアップグレード [ダイヤ]</h3>
+            <div class="item-row"><span>シャープネス</span><span class="price-diamond">ダイヤ 4-8</span></div>
+            <div class="item-row"><span>プロテクション I-IV</span><span class="price-diamond">ダイヤ 2-30</span></div>
+            <div class="item-row"><span>ヒールプール</span><span class="price-diamond">ダイヤ 1-3</span></div>
+            <div class="item-row"><span>ドラゴンバフ</span><span class="price-diamond">ダイヤ 5</span></div>
+            <div class="item-row"><span>鉄フォージ→金→エメ→溶岩</span><span class="price-diamond">ダイヤ 2-16</span></div>
+            <div class="item-row"><span>トラップ x3</span><span class="price-diamond">ダイヤ 1-4</span></div>
+        </div>
+        <div class="mc-content" id="bw-maps" style="display:none">
+            <div class="mc-back-btn" onclick="showBwMain()">← 戻る</div>
+            <h3>═══ マップ一覧 ═══</h3><br>
+            <div class="item-row"><span style="color:#ffff55">🏜️ Sand</span><span>16人 (2人×8チーム)</span></div>
+            <div class="item-row"><span style="color:#55ff55">🌳 Tree</span><span>16人 (4人×4チーム)</span></div>
+            <div class="item-row"><span style="color:#55ffff">🏙️ City</span><span>8人 (ソロ)</span></div>
+            <div class="item-row"><span style="color:#ffaa00">🏔️ MESA</span><span>16人 (4人×4チーム)</span></div>
+            <div class="item-row"><span style="font-size:8px;color:#ff5555">RetBare3 新登場 ※ベータ段階</span></div>
+            <div class="item-row"><span style="color:#ff55ff">🏛️ PAVILION</span><span>8人 (ソロ)</span></div>
+            <div class="item-row"><span style="font-size:8px;color:#ff5555">RetBare3 新登場 ※ベータ段階</span></div>
+        </div>
+        <div class="mc-content" id="bw-cmd" style="display:none">
+            <div class="mc-back-btn" onclick="showBwMain()">← 戻る</div>
+            <h3>═══ コマンド ═══</h3><br>
+            <span style="color:#55ff55">/warp bwc</span><br>
+            ベッドウォーズコーナーに移動
+        </div>
+    </div>
+</div>
+
+<!-- MC GUI: SKYWARS -->
+<div class="mc-overlay" id="skywars-gui">
+    <div class="mc-gui">
+        <div class="mc-gui-title">⚔️ SKYWARS</div>
+        <div class="mc-gui-close" onclick="closeAllGui()">X</div>
+        <div class="mc-content">
+            <h3>基本情報</h3>
+            空島スタートのバトルロイヤル！<br>
+            最後の1人が勝者！<br><br>
+            <h3>参加方法</h3>
+            <span style="color:#55ff55">/skywars join</span> で参加<br><br>
+            <h3>KITシステム</h3>
+            参加前にKITを選択可能！<br>
+            オリジナルKIT 10種類以上<br><br>
+            例: <span style="color:#55ffff">盲目の剣</span> -<br>
+            攻撃した相手に盲目を付与する<br>
+            特殊KIT<br><br>
+            自分のプレイスタイルに合わせて<br>
+            KITを選択して参戦！
+        </div>
+    </div>
+</div>
+
+<!-- MC GUI: DUEL -->
+<div class="mc-overlay" id="duel-gui">
+    <div class="mc-gui">
+        <div class="mc-gui-title">🎯 DUEL</div>
+        <div class="mc-gui-close" onclick="closeAllGui()">X</div>
+        <div class="mc-slot-grid" id="duel-select">
+            <div class="mc-slot" onclick="showDuelDetail('sword')"><span class="slot-icon">🗡️</span><span class="slot-name">SWORD DUEL</span></div>
+            <div class="mc-slot" onclick="showDuelDetail('mace')"><span class="slot-icon">🔨</span><span class="slot-name">MACE PVP</span></div>
+            <div class="mc-slot" onclick="showDuelDetail('axe')"><span class="slot-icon">🪓</span><span class="slot-name">AXE DUEL</span></div>
+        </div>
+        <div class="mc-content" id="duel-sword" style="display:none">
+            <div class="mc-back-btn" onclick="showDuelSelect()">← 戻る</div>
+            <h3>🗡️ SWORD DUEL</h3><br>
+            ダイヤフル装備 + ダイヤ剣の<br>1vs1です。<br><br>
+            装備は全員同じなので、<br>
+            <span style="color:#ffaa00">純粋に立ち回りの差が出ます。</span><br><br>
+            最もシンプルで、最も実力が出る。
+        </div>
+        <div class="mc-content" id="duel-mace" style="display:none">
+            <div class="mc-back-btn" onclick="showDuelSelect()">← 戻る</div>
+            <h3>🔨 MACE PVP</h3><br>
+            ネザライトフル装備にメイス2本、<br>
+            Wind Charge、エンダーパール、<br>
+            ポーション全部入りの1vs1！<br><br>
+            <span style="color:#55ffff">Wind Chargeで飛んで</span><br>
+            <span style="color:#55ffff">メイスを叩きつける空中戦！</span><br><br>
+            <span style="color:#ffaa00">大迫力のバトルを楽しめ！</span>
+        </div>
+        <div class="mc-content" id="duel-axe" style="display:none">
+            <div class="mc-back-btn" onclick="showDuelSelect()">← 戻る</div>
+            <h3>🪓 AXE DUEL</h3><br>
+            エイムが重要、回復も一切ない、<br>
+            実力が最高級に出る<br>
+            <span style="color:#ff5555">圧倒的純粋バトル。</span><br><br>
+            ソードと違い、<br>
+            盾をどう壊すか、<br>
+            弓をどう扱うかなどが出てくるので<br>
+            <span style="color:#55ffff">かなり頭を使う</span><br>
+            <span style="color:#ffaa00">最高のバトルです。</span>
+        </div>
+    </div>
+</div>
+
+<!-- TERMINAL -->
+<div class="terminal-overlay" id="terminal-overlay">
+    <div class="terminal-box" id="terminal-box">
+        <div class="terminal-header">
+            <span id="terminal-title">RetBareServer Terminal v1.0</span>
+            <span class="close-term" onclick="closeTerminal()">✕</span>
+        </div>
+        <div class="terminal-body" id="terminal-body">
+            <div class="terminal-line info">RetBareServer Terminal v1.0</div>
+            <div class="terminal-line">Type a command...</div>
+        </div>
+        <div class="terminal-input-row" id="terminal-input-row">
+            <span id="terminal-prompt">/</span>
+            <input type="text" class="terminal-input" id="terminal-input" autocomplete="off" spellcheck="false" onkeydown="if(event.key==='Enter')execCmd()">
+        </div>
+    </div>
+</div>
+
+<!-- GAMBLING -->
+<div class="gamble-overlay" id="gamble-overlay">
+    <div class="gamble-box">
+        <span class="gamble-close" onclick="closeGamble()">✕</span>
+        <div class="gamble-title">SUPER HYPER GAMBLING</div>
+        <div class="gamble-subtitle">超絶面白いスーパーハイパーギャンブル</div>
+        <div class="gamble-coins" id="gamble-coins">💰 所持コイン: 1000</div>
+        <div style="margin:0.5rem 0;font-size:0.8rem;color:#aaa">BET: <input type="number" id="gamble-bet" value="100" min="1" max="10000" style="background:#111;border:1px solid #555;color:#ffaa00;padding:4px 8px;width:80px;border-radius:4px;font-family:monospace;text-align:center"></div>
+        <div class="gamble-display">
+            <div class="gamble-reel" id="reel1">🎰</div>
+            <div class="gamble-reel" id="reel2">🎰</div>
+            <div class="gamble-reel" id="reel3">🎰</div>
+        </div>
+        <div class="gamble-result" id="gamble-result"></div>
+        <button class="gamble-btn" id="gamble-spin" onclick="spinGamble()">🎰 SPIN!</button>
+        <div class="gamble-history" id="gamble-history"></div>
+    </div>
+</div>
+
+<!-- ===== HERO ===== -->
 <section class="hero">
     <div class="hero-logo">RetBareServer</div>
     <p class="hero-tagline">PVPもサバイバルも、全部ここで。</p>
@@ -647,144 +488,83 @@
         <a href="#join" class="btn btn-accent">今すぐ参加する</a>
     </div>
     <div class="ip-group">
-        <div class="server-ip" onclick="navigator.clipboard.writeText('110.67.56.168:25565')">
-            <div><span class="label">Java版（推奨）- クリックでコピー</span><br>110.67.56.168:25565</div>
-        </div>
-        <div class="server-ip" onclick="navigator.clipboard.writeText('110.67.56.168:19132')" style="opacity:0.6">
-            <div><span class="label">統合版（非推奨）- クリックでコピー</span><br>110.67.56.168:19132</div>
-        </div>
+        <div class="server-ip" onclick="navigator.clipboard.writeText('110.67.56.168:25565')"><div><span class="label">Java版（推奨）- クリックでコピー</span><br>110.67.56.168:25565</div></div>
+        <div class="server-ip" onclick="navigator.clipboard.writeText('110.67.56.168:19132')" style="opacity:0.6"><div><span class="label">統合版（非推奨）- クリックでコピー</span><br>110.67.56.168:19132</div></div>
     </div>
 </section>
 
+<!-- GAME MODES -->
 <section id="games">
     <h2 class="section-title">GAME MODES</h2>
     <p class="section-sub">すべてのゲームモードは /rmenu から移動できます</p>
     <div class="game-grid">
-        <div class="game-card">
-            <div class="card-icon">🛏️</div>
-            <h3>BedWars</h3>
-            <span class="card-tag tag-pvp">PVP</span>
-            <p>ベッドを守りながら相手チームを全滅させる対人戦。TNT羊など独自アイテムが多数登場する、RetBareServer自慢のゲームモード。</p>
+        <div class="game-card" style="cursor:pointer" onclick="openBedwarsGui()">
+            <div class="card-icon">🛏️</div><h3>BedWars</h3><span class="card-tag tag-pvp">PVP</span>
+            <p>ベッドを守りながら相手チームを全滅させる対人戦。TNT羊、氷の剣など独自アイテムが多数登場する、RetBareServer自慢のゲームモード。クリックで詳細!</p>
             <div class="reward">勝利ボーナス: 1,028円 ｜ ベッド破壊: 1,000円</div>
         </div>
-        <div class="game-card">
-            <div class="card-icon">⚔️</div>
-            <h3>SkyWars</h3>
-            <span class="card-tag tag-pvp">バトロワ</span>
+        <div class="game-card" style="cursor:pointer" onclick="openSkywarsGui()">
+            <div class="card-icon">⚔️</div><h3>SkyWars</h3><span class="card-tag tag-pvp">バトロワ</span>
             <p>空島スタートのバトルロイヤル。盲目の剣など、このサーバーだけのオリジナルKITで最後の1人を目指せ。10種類以上のKITを用意。</p>
         </div>
         <div class="game-card">
-            <div class="card-icon">🌿</div>
-            <h3>サバイバル</h3>
-            <span class="card-tag tag-survival">経済サバイバル</span>
+            <div class="card-icon">🌿</div><h3>サバイバル</h3><span class="card-tag tag-survival">経済サバイバル</span>
             <p>独自経済・ガチャ・オークション・SmartSpawner・カスタムエンチャント73種。充実したサバイバル生活を送ろう。カスタムモブも出現。</p>
         </div>
         <div class="game-card">
-            <div class="card-icon">🧊</div>
-            <h3>OneBlock</h3>
-            <span class="card-tag tag-creative">建築</span>
+            <div class="card-icon">🧊</div><h3>OneBlock</h3><span class="card-tag tag-creative">建築</span>
             <p>足元のたった1ブロックから始まる世界。壊すたびに新しいブロックやアイテムが出現。集めた素材で拠点を拡張していこう。</p>
         </div>
         <div class="game-card">
-            <div class="card-icon">💣</div>
-            <h3>TNT Run</h3>
-            <span class="card-tag tag-minigame">ミニゲーム</span>
+            <div class="card-icon">💣</div><h3>TNT Run</h3><span class="card-tag tag-minigame">ミニゲーム</span>
             <p>TNTの上を走り続けろ！足元のブロックが次々消えていく中、最後まで落ちなかったプレイヤーが勝利。</p>
         </div>
-        <div class="game-card">
-            <div class="card-icon">🗡️</div>
-            <h3>Mace PvP</h3>
-            <span class="card-tag tag-pvp">PVP ARENA</span>
-            <p>メイスを使った対戦モード。PvPArenaで手軽にバトル。</p>
+        <div class="game-card" style="cursor:pointer" onclick="openDuelGui()">
+            <div class="card-icon">🎯</div><h3>Duel</h3><span class="card-tag tag-pvp">PVP</span>
+            <p>Sword / Mace / Axe の3種類の1v1決闘モード。クリックで各モード詳細！</p>
         </div>
         <div class="game-card">
-            <div class="card-icon">⚔️</div>
-            <h3>Sword PvP</h3>
-            <span class="card-tag tag-pvp">PVP ARENA</span>
-            <p>剣を使った近接戦闘。シンプルだけど奥が深い1v1バトル。</p>
-        </div>
-        <div class="game-card">
-            <div class="card-icon">🪓</div>
-            <h3>Axe PvP</h3>
-            <span class="card-tag tag-pvp">PVP ARENA</span>
-            <p>斧を使った重量級の近接対戦。盾を割って勝利を掴め。</p>
-        </div>
-        <div class="game-card">
-            <div class="card-icon">🎯</div>
-            <h3>Duel</h3>
-            <span class="card-tag tag-pvp">PVP</span>
-            <p>1v1の決闘モード。実力で勝負を決めろ。</p>
-        </div>
-        <div class="game-card">
-            <div class="card-icon">🤖</div>
-            <h3>PracticeBot</h3>
-            <span class="card-tag tag-minigame">練習</span>
-            <p>Bot相手にPvPの練習ができる。スキルを磨きたいときに。</p>
+            <div class="card-icon">🤖</div><h3>PracticeBot</h3><span class="card-tag tag-minigame">練習</span>
+            <p>Bot相手にPvPの練習ができる。スキルを磨きたいときに利用できる。</p>
         </div>
     </div>
 </section>
 
+<!-- ECONOMY -->
 <section id="economy">
     <h2 class="section-title">ECONOMY</h2>
     <p class="section-sub">稼いで、買って、強くなれ</p>
     <div class="economy-flow">
-        <div class="flow-step">
-            <div class="step-num">1</div>
-            <h4>木を伐ったり鉱石を掘る</h4>
-            <p>/warp shop でShopへ移動。蜂（ハチ）のNPCに右クリックで素材を売却。「YOUPRICE」の金額が手に入る。</p>
-        </div>
-        <div class="flow-step">
-            <div class="step-num">2</div>
-            <h4>ショップ・ガチャで強化</h4>
-            <p>/shop で3×3ツルハシなどの神アイテムを購入。5種類のガチャで最強装備を狙え。</p>
-        </div>
-        <div class="flow-step">
-            <div class="step-num">3</div>
-            <h4>オークションで取引</h4>
-            <p>/ah でプレイヤー間取引。手持ちアイテムを /ah sell [値段] で出品。</p>
-        </div>
-        <div class="flow-step">
-            <div class="step-num">4</div>
-            <h4>BedWarsで稼ぐ</h4>
-            <p>勝利で1,028円、ベッド破壊で1,000円。PvPしながら効率よく稼げる。</p>
-        </div>
+        <div class="flow-step"><div class="step-num">1</div><h4>木を伐ったり鉱石を掘る</h4><p>/warp shop でShopへ移動。蜂（ハチ）のNPCに右クリックで素材を売却。「YOUPRICE」の金額が手に入る。</p></div>
+        <div class="flow-step"><div class="step-num">2</div><h4>ショップ・ガチャで強化</h4><p>/shop で3×3ツルハシなどの神アイテムを購入。5種類のガチャで最強装備を狙え。</p></div>
+        <div class="flow-step"><div class="step-num">3</div><h4>オークションで取引</h4><p>/ah でプレイヤー間取引。手持ちアイテムを /ah sell [値段] で出品。</p></div>
+        <div class="flow-step"><div class="step-num">4</div><h4>BedWarsで稼ぐ</h4><p>勝利で1,028円、ベッド破壊で1,000円。PvPしながら効率よく稼げる。</p></div>
     </div>
+
     <div class="feature-highlight">
         <h3>MobCoin</h3>
         <p>モブを倒すと獲得できる特殊通貨。通常の円とは別の通貨体系で、/mc で確認、/mc shop でSmartSpawnerなどの限定アイテムを購入できる。/mobcoins pay で他のプレイヤーに送金、/mobcoins top でランキングを確認。</p>
     </div>
+
     <div class="feature-highlight">
         <h3>SmartSpawner</h3>
         <p>通常のスポナーの超強化版。実際にモブをスポーンさせず、ドロップアイテムとXPを仮想的に自動生成する。サーバー負荷ゼロでラグなし。右クリックでGUIを開いてアイテム一括回収、ホッパーでチェストへ自動搬出も可能。スポナー同士をスタック（重ね置き）して効率アップ。入手はスポナーガチャまたはMobCoin Shop。</p>
     </div>
+
     <h3 style="text-align:center; margin-top:2rem; font-weight:900;">独自アイテム</h3>
     <div class="items-showcase">
-        <div class="item-card">
-            <h4>リカバリートーテム</h4>
-            <p>インベントリに入れて死亡するとトーテム自体は消費されるが、それ以外の全アイテムを保持。ハズレでも当たり。</p>
-            <div class="item-price">2,000円（Shop） / マジックガチャ</div>
-        </div>
-        <div class="item-card">
-            <h4>3×3 アメジストのツルハシ</h4>
-            <p>3×3の9ブロックを一度に採掘できる最強ツルハシ。</p>
-            <div class="item-price">35,000円</div>
-        </div>
-        <div class="item-card">
-            <h4>一括破壊の斧</h4>
-            <p>原木を1ブロック壊すと木全体を一気に伐採。</p>
-            <div class="item-price">35,000円</div>
-        </div>
-        <div class="item-card">
-            <h4>アメジストチェストプレート</h4>
-            <p>着ていると体力が2倍になる紫色の特殊防具。</p>
-            <div class="item-price">35,000円</div>
-        </div>
+        <div class="item-card"><h4>リカバリートーテム</h4><p>インベントリに入れて死亡するとトーテム自体は消費されるが、それ以外の全アイテムを保持。ハズレでも当たり。</p><div class="item-price">2,000円（Shop） / マジックガチャ</div></div>
+        <div class="item-card"><h4>3×3 アメジストのツルハシ</h4><p>3×3の9ブロックを一度に採掘できる最強ツルハシ。</p><div class="item-price">35,000円</div></div>
+        <div class="item-card"><h4>一括破壊の斧</h4><p>原木を1ブロック壊すと木全体を一気に伐採。</p><div class="item-price">35,000円</div></div>
+        <div class="item-card"><h4>アメジストチェストプレート</h4><p>着ていると体力が2倍になる紫色の特殊防具。</p><div class="item-price">35,000円</div></div>
     </div>
 </section>
 
+<!-- SHOP -->
 <section id="shop">
     <h2 class="section-title">SHOP</h2>
     <p class="section-sub">/shop でGUIを開く ｜ /warp shop で直接移動</p>
+
     <div class="shop-category">
         <h3>🥩 食べ物</h3>
         <table><tr><th>アイテム</th><th>価格</th></tr>
@@ -793,6 +573,7 @@
         <tr><td>金のリンゴ ×1</td><td class="price">5,000円</td></tr>
         <tr><td>エンチャント金のリンゴ ×64</td><td class="price">500,000円</td></tr></table>
     </div>
+
     <div class="shop-category">
         <h3>⛏️ 鉱石</h3>
         <table><tr><th>アイテム</th><th>価格</th></tr>
@@ -802,6 +583,7 @@
         <tr><td>エメラルド</td><td class="price">256円</td></tr>
         <tr><td>ダイヤモンド</td><td class="price">1,024円</td></tr></table>
     </div>
+
     <div class="shop-category">
         <h3>🧪 魔道具</h3>
         <table><tr><th>アイテム</th><th>価格</th></tr>
@@ -811,6 +593,7 @@
         <tr><td>一括破壊の斧</td><td class="price">35,000円</td></tr>
         <tr><td>ネザライト装備一式</td><td class="price">500,000円</td></tr></table>
     </div>
+
     <div class="shop-category">
         <h3>🏹 弓</h3>
         <table><tr><th>アイテム</th><th>価格</th></tr>
@@ -820,6 +603,7 @@
         <tr><td>エンダーパールの弓</td><td class="price">8,000円</td></tr>
         <tr><td>ホバーの弓</td><td class="price">10,000円</td></tr></table>
     </div>
+
     <div class="shop-category">
         <h3>🥚 スポーンエッグ</h3>
         <table><tr><th>アイテム</th><th>価格</th></tr>
@@ -832,8 +616,21 @@
         <tr><td>村人ゾンビのスポーンエッグ</td><td class="price">7,000円</td></tr>
         <tr><td>ウォーデンのスポーンエッグ</td><td class="price">7,500円</td></tr></table>
     </div>
+
+    <div class="shop-category">
+        <h3>🔨 鍛冶型</h3>
+        <table><tr><th>アイテム</th><th>価格</th></tr>
+        <tr><td>各種鍛冶型テンプレート</td><td class="price">各種価格</td></tr></table>
+    </div>
+
+    <div class="shop-category">
+        <h3>💿 音楽ディスク</h3>
+        <table><tr><th>アイテム</th><th>価格</th></tr>
+        <tr><td>各種音楽ディスク（カスタム対応）</td><td class="price">各種価格</td></tr></table>
+    </div>
 </section>
 
+<!-- GACHA -->
 <section id="gacha">
     <h2 class="section-title">GACHA</h2>
     <p class="section-sub">5種類のガチャで最強を目指せ</p>
@@ -868,9 +665,13 @@
     </div>
 </section>
 
+<!-- ===== Part 1 ここまで ===== -->
+<!-- ===== Part 2 でエンチャント全73種〜footer〜JS〜Miiboを出力 ===== -->
+<!-- ENCHANTMENTS -->
 <section id="enchants">
     <h2 class="section-title">CUSTOM ENCHANTMENTS</h2>
     <p class="section-sub">73種の独自カスタムエンチャント ｜ 全て日本語説明付き</p>
+
     <div class="enchant-tabs">
         <div class="enchant-tab active" onclick="showTab('armor')">防具 (18)</div>
         <div class="enchant-tab" onclick="showTab('bow')">弓 (15)</div>
@@ -880,6 +681,7 @@
         <div class="enchant-tab" onclick="showTab('universal')">汎用 (6)</div>
     </div>
 
+    <!-- ARMOR 18 -->
     <div class="enchant-panel active" id="tab-armor">
         <div class="enchant-item"><div><span class="enchant-name">Cold Steel</span> <span class="enchant-jp">コールドスチール</span><div class="enchant-desc">攻撃してきた相手に採掘速度低下を付与する</div></div><div class="enchant-meta"><span class="lv">最大Lv III</span></div></div>
         <div class="enchant-item"><div><span class="enchant-name">Darkness Cloak</span> <span class="enchant-jp">闇のマント</span><div class="enchant-desc">攻撃してきた相手に暗闇効果を付与する</div></div><div class="enchant-meta"><span class="lv">最大Lv III</span></div></div>
@@ -901,6 +703,7 @@
         <div class="enchant-item"><div><span class="enchant-name">Water Breathing</span> <span class="enchant-jp">ウォーターブリージング</span><div class="enchant-desc">水中呼吸効果を付与する（ヘルメット）</div></div><div class="enchant-meta"><span class="lv">最大Lv I</span></div></div>
     </div>
 
+    <!-- BOW 15 -->
     <div class="enchant-panel" id="tab-bow">
         <div class="enchant-item"><div><span class="enchant-name">Bomber</span> <span class="enchant-jp">ボマー</span><div class="enchant-desc">矢の代わりにTNTを射出する</div></div><div class="enchant-meta"><span class="lv">最大Lv III</span></div></div>
         <div class="enchant-item"><div><span class="enchant-name">Confusing Arrows</span> <span class="enchant-jp">混乱の矢</span><div class="enchant-desc">矢に吐き気効果を付与する</div></div><div class="enchant-meta"><span class="lv">最大Lv III</span></div></div>
@@ -919,6 +722,7 @@
         <div class="enchant-item"><div><span class="enchant-name">Withered Arrows</span> <span class="enchant-jp">ウィザーの矢</span><div class="enchant-desc">矢にウィザー効果を付与する</div></div><div class="enchant-meta"><span class="lv">最大Lv III</span></div></div>
     </div>
 
+    <!-- TOOL 12 -->
     <div class="enchant-panel" id="tab-tool">
         <div class="enchant-item"><div><span class="enchant-name">Blast Mining</span> <span class="enchant-jp">ブラストマイニング</span><div class="enchant-desc">爆発でブロックを採掘する</div></div><div class="enchant-meta"><span class="lv">最大Lv V</span></div></div>
         <div class="enchant-item"><div><span class="enchant-name">Glass Breaker</span> <span class="enchant-jp">グラスブレイカー</span><div class="enchant-desc">ガラスを一瞬で破壊する</div></div><div class="enchant-meta"><span class="lv">最大Lv I</span></div></div>
@@ -934,6 +738,7 @@
         <div class="enchant-item"><div><span class="enchant-name">Veinminer</span> <span class="enchant-jp">ヴェインマイナー</span><div class="enchant-desc">鉱脈を一括採掘する</div></div><div class="enchant-meta"><span class="lv">最大Lv III</span></div></div>
     </div>
 
+    <!-- FISHING 6 -->
     <div class="enchant-panel" id="tab-fishing">
         <div class="enchant-item"><div><span class="enchant-name">Auto Reel</span> <span class="enchant-jp">オートリール</span><div class="enchant-desc">魚がかかると自動で巻き上げる</div></div><div class="enchant-meta"><span class="lv">最大Lv I</span></div></div>
         <div class="enchant-item"><div><span class="enchant-name">Curse of Drowned</span> <span class="enchant-jp">溺死の呪い</span><div class="enchant-desc">釣りをするとドラウンドが釣れることがある</div></div><div class="enchant-meta"><span class="lv">最大Lv III</span></div></div>
@@ -943,6 +748,7 @@
         <div class="enchant-item"><div><span class="enchant-name">Survivalist</span> <span class="enchant-jp">サバイバリスト</span><div class="enchant-desc">生魚が釣れると自動的に焼き魚にする</div></div><div class="enchant-meta"><span class="lv">最大Lv I</span></div></div>
     </div>
 
+    <!-- WEAPON 24 -->
     <div class="enchant-panel" id="tab-weapon">
         <div class="enchant-item"><div><span class="enchant-name">Bane of Netherspawn</span> <span class="enchant-jp">ネザーモブ特効</span><div class="enchant-desc">ネザーのモブへのダメージが増加する</div></div><div class="enchant-meta"><span class="lv">最大Lv V</span></div></div>
         <div class="enchant-item"><div><span class="enchant-name">Blindness</span> <span class="enchant-jp">盲目</span><div class="enchant-desc">攻撃した相手に盲目効果を付与する</div></div><div class="enchant-meta"><span class="lv">最大Lv II</span></div></div>
@@ -970,6 +776,7 @@
         <div class="enchant-item"><div><span class="enchant-name">Wither</span> <span class="enchant-jp">ウィザー</span><div class="enchant-desc">攻撃した相手にウィザー効果を付与する</div></div><div class="enchant-meta"><span class="lv">最大Lv II</span></div></div>
     </div>
 
+    <!-- UNIVERSAL 6 -->
     <div class="enchant-panel" id="tab-universal">
         <div class="enchant-item"><div><span class="enchant-name">Curse of Breaking</span> <span class="enchant-jp">破壊の呪い</span><div class="enchant-desc">使用時に耐久値がより多く減る</div></div><div class="enchant-meta"><span class="lv">最大Lv III</span></div></div>
         <div class="enchant-item"><div><span class="enchant-name">Curse of Fragility</span> <span class="enchant-jp">脆弱の呪い</span><div class="enchant-desc">砥石や金床での操作ができなくなる</div></div><div class="enchant-meta"><span class="lv">最大Lv I</span></div></div>
@@ -980,6 +787,7 @@
     </div>
 </section>
 
+<!-- COMMANDS -->
 <section id="commands">
     <h2 class="section-title">COMMANDS</h2>
     <p class="section-sub">知っておきたい便利コマンド</p>
@@ -995,6 +803,7 @@
             <div class="cmd-item"><code>/back</code><span>直前の場所に戻る</span></div>
             <div class="cmd-item"><code>/spawn</code><span>スポーン地点に戻る</span></div>
             <div class="cmd-item"><code>/warp shop</code><span>ショップへ直接移動</span></div>
+            <div class="cmd-item"><code>/warp bwc</code><span>BedWarsコーナーへ移動</span></div>
         </div>
         <div class="cmd-group">
             <h3>💰 経済系</h3>
@@ -1010,6 +819,11 @@
             <div class="cmd-item"><code>/mobcoins top</code><span>MobCoinランキング</span></div>
         </div>
         <div class="cmd-group">
+            <h3>🎮 PVP系</h3>
+            <div class="cmd-item"><code>/skywars join</code><span>SkyWars参加</span></div>
+            <div class="cmd-item"><code>/warp bwc</code><span>BedWarsコーナー</span></div>
+        </div>
+        <div class="cmd-group">
             <h3>🎒 便利系</h3>
             <div class="cmd-item"><code>/craft</code><span>どこでも作業台を開く</span></div>
             <div class="cmd-item"><code>/enderchest</code><span>どこでもエンダーチェストを開く</span></div>
@@ -1023,6 +837,7 @@
     </div>
 </section>
 
+<!-- RULES -->
 <section id="rules">
     <h2 class="section-title">RULES</h2>
     <p class="section-sub">みんなが楽しめるサーバーのために</p>
@@ -1051,6 +866,7 @@
     </div>
 </section>
 
+<!-- HOW TO JOIN -->
 <section id="join">
     <h2 class="section-title">HOW TO JOIN</h2>
     <p class="section-sub">3ステップで今すぐ参加</p>
@@ -1078,9 +894,11 @@
     </div>
 </section>
 
+<!-- FAQ -->
 <section id="faq">
     <h2 class="section-title">FAQ</h2>
     <p class="section-sub">よくある質問</p>
+
     <div class="faq-item">
         <div class="faq-q" onclick="this.parentElement.classList.toggle('open')">お金はどうやって確認する？</div>
         <div class="faq-a"><p>/money コマンドで所持金を確認できます。MobCoinは /mc で確認。</p></div>
@@ -1119,139 +937,132 @@
     <p>RetBareServer &copy; 2026 ｜ <a href="https://discord.gg/2v7JbraYBY" target="_blank">Discord</a> ｜ PVPもサバイバルも、全部ここで。</p>
 </footer>
 
-<!-- ===== エンチャントタブ切替 ===== -->
+<!-- ===== ALL JAVASCRIPT ===== -->
 <script>
-    function showTab(name) {
-        document.querySelectorAll('.enchant-panel').forEach(p => p.classList.remove('active'));
-        document.querySelectorAll('.enchant-tab').forEach(t => t.classList.remove('active'));
-        document.getElementById('tab-' + name).classList.add('active');
-        event.target.classList.add('active');
+// エンチャントタブ
+function showTab(name){
+    document.querySelectorAll('.enchant-panel').forEach(p=>p.classList.remove('active'));
+    document.querySelectorAll('.enchant-tab').forEach(t=>t.classList.remove('active'));
+    document.getElementById('tab-'+name).classList.add('active');
+    event.target.classList.add('active');
+}
+
+// MC GUI
+function closeAllGui(){document.querySelectorAll('.mc-overlay').forEach(o=>o.classList.remove('active'))}
+function openPvpMenu(){closeAllGui();document.getElementById('pvp-menu').classList.add('active')}
+function openBedwarsGui(){closeAllGui();document.getElementById('bedwars-gui').classList.add('active');showBwMain()}
+function openSkywarsGui(){closeAllGui();document.getElementById('skywars-gui').classList.add('active')}
+function openDuelGui(){closeAllGui();document.getElementById('duel-gui').classList.add('active');showDuelSelect()}
+function showBwMain(){document.getElementById('bw-main').style.display='block';document.getElementById('bw-shop').style.display='none';document.getElementById('bw-maps').style.display='none';document.getElementById('bw-cmd').style.display='none'}
+function showBwShop(){document.getElementById('bw-main').style.display='none';document.getElementById('bw-shop').style.display='block'}
+function showBwMaps(){document.getElementById('bw-main').style.display='none';document.getElementById('bw-maps').style.display='block'}
+function showBwCmd(){document.getElementById('bw-main').style.display='none';document.getElementById('bw-cmd').style.display='block'}
+function showDuelSelect(){document.getElementById('duel-select').style.display='grid';document.getElementById('duel-sword').style.display='none';document.getElementById('duel-mace').style.display='none';document.getElementById('duel-axe').style.display='none'}
+function showDuelDetail(t){document.getElementById('duel-select').style.display='none';document.getElementById('duel-sword').style.display=t==='sword'?'block':'none';document.getElementById('duel-mace').style.display=t==='mace'?'block':'none';document.getElementById('duel-axe').style.display=t==='axe'?'block':'none'}
+
+// HIDDEN TERMINAL
+let opMode=false;
+document.addEventListener('keydown',e=>{if(e.key==='/'&&!document.querySelector('.mc-overlay.active')){e.preventDefault();openTerminal()}});
+function openTerminal(){document.getElementById('terminal-overlay').classList.add('active');setTimeout(()=>document.getElementById('terminal-input').focus(),100)}
+function closeTerminal(){document.getElementById('terminal-overlay').classList.remove('active')}
+function addLine(text,cls){const body=document.getElementById('terminal-body');const d=document.createElement('div');d.className='terminal-line'+(cls?' '+cls:'');d.textContent=text;body.appendChild(d);body.scrollTop=body.scrollHeight}
+function execCmd(){
+    const input=document.getElementById('terminal-input');
+    const cmd=input.value.trim();input.value='';
+    if(!cmd)return;
+    addLine('/ '+cmd);
+    if(cmd==='op 123'){
+        opMode=true;
+        document.getElementById('terminal-box').classList.add('op-mode');
+        document.getElementById('terminal-body').classList.add('op-mode-body');
+        document.getElementById('terminal-input-row').classList.add('op-input');
+        document.getElementById('terminal-input').classList.add('op-input-field');
+        document.getElementById('terminal-prompt').style.color='#ff00ff';
+        document.getElementById('terminal-title').textContent='★ RetBareServer Terminal [OP MODE] ★';
+        addLine('███████████████████████████████','rainbow');
+        addLine('  OP MODE ACTIVATED','rainbow');
+        addLine('  Welcome, Admin.','gold');
+        addLine('███████████████████████████████','rainbow');
+    } else if(opMode&&cmd==='op g open'){
+        addLine('[g] Open wait...','info');
+        setTimeout(()=>{addLine('[g] ok','success');addLine('Gambling module loaded. Type: /op g s','gold')},2000);
+    } else if(opMode&&cmd==='op g s'){
+        addLine('Starting SUPER HYPER GAMBLING...','rainbow');
+        closeTerminal();
+        setTimeout(()=>{document.getElementById('gamble-overlay').classList.add('active')},500);
+    } else if(cmd==='help'){
+        addLine('Available commands:','info');
+        addLine('  help     - Show this help','info');
+        addLine('  clear    - Clear terminal');
+        addLine('  info     - Server info');
+        if(opMode){addLine('  op g open - Open gambling module','gold');addLine('  op g s    - Start gambling','gold')}
+    } else if(cmd==='clear'){
+        document.getElementById('terminal-body').innerHTML='';addLine('Terminal cleared.','info');
+    } else if(cmd==='info'){
+        addLine('RetBareServer | Paper 1.21.1','info');
+        addLine('IP: 110.67.56.168:25565','info');
+        addLine('Discord: discord.gg/2v7JbraYBY','info');
+    } else {
+        addLine('Unknown command: '+cmd,'error');
+        addLine('Type "help" for available commands','error');
     }
+}
+
+// GAMBLING
+let coins=1000;
+const symbols=['💎','👑','🎰','⚡','🔥','💰','🌟','❤️','🍀'];
+function closeGamble(){document.getElementById('gamble-overlay').classList.remove('active')}
+function updateCoins(){document.getElementById('gamble-coins').textContent='💰 所持コイン: '+coins}
+function addHistory(msg){const h=document.getElementById('gamble-history');h.innerHTML=msg+'<br>'+h.innerHTML}
+function spinGamble(){
+    const bet=parseInt(document.getElementById('gamble-bet').value)||100;
+    if(bet>coins){document.getElementById('gamble-result').textContent='コインが足りない！';document.getElementById('gamble-result').className='gamble-result lose';return}
+    if(bet<1)return;
+    coins-=bet;updateCoins();
+    const btn=document.getElementById('gamble-spin');btn.disabled=true;
+    const r1=document.getElementById('reel1'),r2=document.getElementById('reel2'),r3=document.getElementById('reel3');
+    r1.classList.add('spinning');r2.classList.add('spinning');r3.classList.add('spinning');
+    document.getElementById('gamble-result').textContent='';document.getElementById('gamble-result').className='gamble-result';
+    let count=0;
+    const interval=setInterval(()=>{
+        r1.textContent=symbols[Math.floor(Math.random()*symbols.length)];
+        r2.textContent=symbols[Math.floor(Math.random()*symbols.length)];
+        r3.textContent=symbols[Math.floor(Math.random()*symbols.length)];
+        count++;
+        if(count>20){
+            clearInterval(interval);
+            const s1=symbols[Math.floor(Math.random()*symbols.length)];
+            const s2=symbols[Math.floor(Math.random()*symbols.length)];
+            const s3=symbols[Math.floor(Math.random()*symbols.length)];
+            r1.textContent=s1;r2.textContent=s2;r3.textContent=s3;
+            r1.classList.remove('spinning');r2.classList.remove('spinning');r3.classList.remove('spinning');
+            const res=document.getElementById('gamble-result');
+            if(s1===s2&&s2===s3){
+                if(s1==='💎'){const w=bet*50;coins+=w;res.textContent='★ MEGA JACKPOT!! +'+w+' ★';res.className='gamble-result jackpot';addHistory('💎💎💎 MEGA JACKPOT! +'+w)}
+                else{const w=bet*10;coins+=w;res.textContent='🎉 JACKPOT! +'+w;res.className='gamble-result jackpot';addHistory(s1+s1+s1+' JACKPOT! +'+w)}
+            } else if(s1===s2||s2===s3||s1===s3){
+                const w=bet*3;coins+=w;res.textContent='✨ WIN! +'+w;res.className='gamble-result win';addHistory(s1+s2+s3+' WIN +'+w);
+            } else {
+                res.textContent='💀 LOSE... -'+bet;res.className='gamble-result lose';addHistory(s1+s2+s3+' LOSE -'+bet);
+            }
+            updateCoins();btn.disabled=false;
+        }
+    },80);
+}
 </script>
 
 <!-- ===== Miibo AI チャットボット ===== -->
 <script>
-    function addStylesheet(href) {
-        let link = document.createElement('link');
-        link.href = href;
-        link.rel = 'stylesheet';
-        document.head.appendChild(link);
-    }
-
-    function createToggleButton() {
-        const toggleBtn = document.createElement('div');
-        toggleBtn.id = 'chatbot-toggle_button';
-        const anchor = document.createElement('a');
-        anchor.id = 'chat-button';
-        anchor.href = '#';
-        anchor.addEventListener('click', event => {
-            event.preventDefault();
-            toggleChatbox();
-        });
-        const img = document.createElement('img');
-        img.src = 'https://firebasestorage.googleapis.com/v0/b/mabo-f1cc7.appspot.com/o/chaticon.png?alt=media&token=1777070f-a83c-403d-8c83-f387f68ecd52';
-        img.width = '100';
-        img.height = '100';
-        anchor.appendChild(img);
-        toggleBtn.appendChild(anchor);
-        document.body.appendChild(toggleBtn);
-    }
-
-    function createChatboxHeader() {
-        const header = document.createElement('div');
-        header.id = 'chatbot-header';
-        header.style.background = '#4169e1';
-        const logo = document.createElement('div');
-        logo.id = 'chatbot-logo';
-        logo.innerText = 'RetbareAI v1.0対応';
-        const closeIcon = document.createElement('i');
-        closeIcon.id = 'chatbot-close-icon';
-        closeIcon.className = 'material-icons material-symbols-outlined waves-light';
-        closeIcon.innerText = 'close';
-        closeIcon.addEventListener('click', event => {
-            event.preventDefault();
-            toggleChatbox();
-        });
-        header.appendChild(logo);
-        header.appendChild(closeIcon);
-        return header;
-    }
-
-    function createChatbox() {
-        const chatbox = document.createElement('div');
-        chatbox.id = 'chatbot';
-        chatbox.style.display = 'none';
-        const header = createChatboxHeader();
-        const body = document.createElement('div');
-        body.id = 'chatbot-body';
-        const iframe = document.createElement('iframe');
-        iframe.id = 'inline-frame';
-        iframe.width = '100%';
-        iframe.height = '100%';
-        iframe.dataSrc = 'https://miibo.jp/chat/73737f9a-f0af-4626-bfaf-e300a51f218319d83c5bd081f?name=RetbareAI%20v1.0%E5%AF%BE%E5%BF%9C';
-        iframe.scrolling = 'no';
-        iframe.frameBorder = 'no';
-        body.appendChild(iframe);
-        chatbox.appendChild(header);
-        chatbox.appendChild(body);
-        document.body.appendChild(chatbox);
-    }
-
-    function toggleChatbox(utterance, ...states) {
-        var chatbox = document.getElementById('chatbot');
-        var iframe = document.getElementById('inline-frame');
-        if (typeof utterance !== 'string') {
-            utterance = null;
-        }
-        if (chatbox.style.display === 'none' || utterance) {
-            chatbox.style.display = 'block';
-            var src = 'https://miibo.jp/chat/73737f9a-f0af-4626-bfaf-e300a51f218319d83c5bd081f?name=RetbareAI%20v1.0%E5%AF%BE%E5%BF%9C';
-            states.forEach(state => {
-                if (state.key && state.value) {
-                    src += src.includes('?') ? '&' : '?';
-                    src += `${encodeURIComponent(state.key)}=${encodeURIComponent(state.value)}`;
-                }
-            });
-            if (!iframeLoaded || (utterance && lastUtterance !== utterance)) {
-                if (utterance) {
-                    src += src.includes('?') ? '&' : '?';
-                    src += "utterance=" + encodeURIComponent(utterance);
-                }
-                iframe.src = src;
-                iframeLoaded = true;
-                lastUtterance = utterance;
-            }
-        } else {
-            chatbox.style.display = 'none';
-        }
-    }
-
-    function setupEventListeners() {
-        document.querySelectorAll('.chatButton').forEach(button => {
-            button.addEventListener('click', event => {
-                event.preventDefault();
-                const utterance = button.getAttribute('data-utterance');
-                const statesData = button.getAttribute('data-states');
-                let states = [];
-                try {
-                    const statesObj = JSON.parse(statesData);
-                    states = Object.keys(statesObj).map(key => ({ key, value: statesObj[key] }));
-                } catch (e) {
-                    console.error("Error parsing states data", e);
-                }
-                toggleChatbox(utterance, ...states);
-            });
-        });
-    }
-
-    addStylesheet('https://fonts.googleapis.com/icon?family=Material+Icons');
-    addStylesheet('https://miibo.jp/chat3.css');
-    createToggleButton();
-    createChatbox();
-    setupEventListeners();
-
-    var iframeLoaded = false;
-    var lastUtterance = "";
+function addStylesheet(h){let l=document.createElement('link');l.href=h;l.rel='stylesheet';document.head.appendChild(l)}
+function createToggleButton(){const t=document.createElement('div');t.id='chatbot-toggle_button';const a=document.createElement('a');a.id='chat-button';a.href='#';a.addEventListener('click',e=>{e.preventDefault();toggleChatbox()});const i=document.createElement('img');i.src='https://firebasestorage.googleapis.com/v0/b/mabo-f1cc7.appspot.com/o/chaticon.png?alt=media&token=1777070f-a83c-403d-8c83-f387f68ecd52';i.width='100';i.height='100';a.appendChild(i);t.appendChild(a);document.body.appendChild(t)}
+function createChatboxHeader(){const h=document.createElement('div');h.id='chatbot-header';h.style.background='#4169e1';const l=document.createElement('div');l.id='chatbot-logo';l.innerText='RetbareAI v1.0対応';const c=document.createElement('i');c.id='chatbot-close-icon';c.className='material-icons material-symbols-outlined waves-light';c.innerText='close';c.addEventListener('click',e=>{e.preventDefault();toggleChatbox()});h.appendChild(l);h.appendChild(c);return h}
+function createChatbox(){const cb=document.createElement('div');cb.id='chatbot';cb.style.display='none';const h=createChatboxHeader();const b=document.createElement('div');b.id='chatbot-body';const f=document.createElement('iframe');f.id='inline-frame';f.width='100%';f.height='100%';f.dataSrc='https://miibo.jp/chat/73737f9a-f0af-4626-bfaf-e300a51f218319d83c5bd081f?name=RetbareAI%20v1.0%E5%AF%BE%E5%BF%9C';f.scrolling='no';f.frameBorder='no';b.appendChild(f);cb.appendChild(h);cb.appendChild(b);document.body.appendChild(cb)}
+function toggleChatbox(u,...s){var cb=document.getElementById('chatbot');var f=document.getElementById('inline-frame');if(typeof u!=='string')u=null;if(cb.style.display==='none'||u){cb.style.display='block';var src='https://miibo.jp/chat/73737f9a-f0af-4626-bfaf-e300a51f218319d83c5bd081f?name=RetbareAI%20v1.0%E5%AF%BE%E5%BF%9C';s.forEach(st=>{if(st.key&&st.value){src+=src.includes('?')?'&':'?';src+=encodeURIComponent(st.key)+'='+encodeURIComponent(st.value)}});if(!iframeLoaded||(u&&lastUtterance!==u)){if(u){src+=src.includes('?')?'&':'?';src+='utterance='+encodeURIComponent(u)}f.src=src;iframeLoaded=true;lastUtterance=u}}else{cb.style.display='none'}}
+function setupEventListeners(){document.querySelectorAll('.chatButton').forEach(b=>{b.addEventListener('click',e=>{e.preventDefault();const u=b.getAttribute('data-utterance');const sd=b.getAttribute('data-states');let s=[];try{const so=JSON.parse(sd);s=Object.keys(so).map(k=>({key:k,value:so[k]}))}catch(e){}toggleChatbox(u,...s)})})}
+addStylesheet('https://fonts.googleapis.com/icon?family=Material+Icons');
+addStylesheet('https://miibo.jp/chat3.css');
+createToggleButton();createChatbox();setupEventListeners();
+var iframeLoaded=false;var lastUtterance='';
 </script>
 
 </body>
